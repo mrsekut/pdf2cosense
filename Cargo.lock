@@ -328,9 +328,9 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
 name = "gyazo-api"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74213dd4f744c50c9c439477cec15b114872754a7a78969cce898867b9859e43"
+checksum = "ec4badac5d8cde3f7f730df57b179c6036c2d5843e1a8537bc8af20f7667fbe1"
 dependencies = [
  "reqwest 0.11.27",
  "serde",
