@@ -95,7 +95,7 @@ async fn process_images_concurrently(
                         Some(page)
                     }
                     Err(_) => {
-                        eprintln!("❌ Error on page {}/{}", index + 1, total_pages);
+                        eprintln!("❌ Failed to extract text from image on page {}", index + 1);
                         None
                     }
                 }
