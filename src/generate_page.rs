@@ -52,9 +52,11 @@ async fn fetch_ocr_text_with_retries(
     for attempt in 1..=max_attempts {
         match config.gyazo.image(gyazo_image_id).await {
             Ok(image_data) => {
-                let ocr_text = image_data.ocr.description;
-                if !ocr_text.trim().is_empty() {
-                    return Ok(ocr_text);
+                if let Some(ref ocr) = image_data.metadata.ocr {
+                    let ocr_text = &ocr.description;
+                    if !ocr_text.trim().is_empty() {
+                        return Ok(ocr_text.clone());
+                    }
                 }
             }
             Err(_) => {
