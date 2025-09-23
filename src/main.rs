@@ -35,11 +35,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn dirs_to_cosense(config: Arc<Config>, dir_paths: &[PathBuf]) {
     let m = MultiProgress::new();
 
-    let tasks: Vec<_> = dir_paths
-        .iter()
-        .map(|dir| dir_to_cosense(config.clone(), dir, m.clone()))
-        .collect();
-    future::join_all(tasks).await;
+    for dir in dir_paths {
+        if let Err(e) = dir_to_cosense(config.clone(), dir, m.clone()).await {
+            eprintln!("Error processing directory {}: {}", dir.display(), e);
+        }
+    }
 
     m.clear().unwrap();
 }
