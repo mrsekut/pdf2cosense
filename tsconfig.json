@@ -9,7 +9,8 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "plugins": [{ "name": "@effect/language-service" }]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "pdf-to-json"]
