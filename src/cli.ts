@@ -1,78 +1,35 @@
-import { $ } from 'bun';
-import { uploadToCosense } from './uploader.ts';
-import { resolve } from 'path';
-import { readdir } from 'fs/promises';
+import { Command, Options } from '@effect/cli';
+import { BunContext, BunRuntime } from '@effect/platform-bun';
+import { Console, Effect } from 'effect';
+import { runPdfToJson } from './pdf-to-json.ts';
 
-const WORKSPACE_DIR = './workspace';
-const PDF_TO_JSON_DIR = './pdf-to-json';
+// Options
+const jsonOnly = Options.boolean('json-only').pipe(
+  Options.withDescription('Only generate JSON, skip upload'),
+  Options.withDefault(false),
+);
 
-async function runPdfToJson(): Promise<string[]> {
-  console.log('📄 Running pdf-to-json (Rust)...');
+// Main command
+const mainCommand = Command.make('pdf2cosense', { jsonOnly }, args =>
+  Effect.gen(function* () {
+    const { jsonOnly } = args;
 
-  const result = await $`cd ${PDF_TO_JSON_DIR} && cargo run`.quiet();
-
-  if (result.exitCode !== 0) {
-    console.error('Failed to run pdf-to-json');
-    console.error(result.stderr.toString());
-    process.exit(1);
-  }
-
-  console.log(result.stdout.toString());
-
-  // Find generated JSON files
-  const files = await readdir(WORKSPACE_DIR);
-  const jsonFiles = files
-    .filter(f => f.endsWith('-ocr.json'))
-    .map(f => resolve(WORKSPACE_DIR, f));
-
-  return jsonFiles;
-}
-
-async function main() {
-  const args = process.argv.slice(2);
-  const jsonOnly = args.includes('--json-only');
-  const uploadOnly = args.includes('--upload-only');
-  const projectName = args.find(a => a.startsWith('--project='))?.split('=')[1];
-
-  let jsonFiles: string[] = [];
-
-  // Step 1: Generate JSON (unless --upload-only)
-  if (!uploadOnly) {
-    jsonFiles = await runPdfToJson();
-    console.log(`✅ Generated ${jsonFiles.length} JSON file(s)`);
+    const jsonFiles = yield* runPdfToJson;
+    yield* Console.log(`✅ Generated ${jsonFiles.length} JSON file(s)`);
 
     if (jsonOnly) {
-      console.log('Done (--json-only mode)');
+      yield* Console.log('Done (--json-only mode)');
       return;
     }
-  } else {
-    // Find existing JSON files for upload
-    const files = await readdir(WORKSPACE_DIR);
-    jsonFiles = files
-      .filter(f => f.endsWith('-ocr.json'))
-      .map(f => resolve(WORKSPACE_DIR, f));
-  }
 
-  // Step 2: Upload to Cosense
-  if (jsonFiles.length === 0) {
-    console.log('No JSON files found to upload');
-    return;
-  }
+    yield* Console.log('✅ All done!');
+  }),
+);
 
-  if (!projectName) {
-    console.error('Please specify --project=<name> for upload');
-    process.exit(1);
-  }
-
-  for (const jsonFile of jsonFiles) {
-    console.log(`📤 Uploading ${jsonFile}...`);
-    await uploadToCosense(jsonFile, projectName);
-  }
-
-  console.log('✅ All done!');
-}
-
-main().catch(e => {
-  console.error(e);
-  process.exit(1);
+// CLI entry point
+const cli = Command.run(mainCommand, {
+  name: 'pdf2cosense',
+  version: '0.1.0',
 });
+
+cli(process.argv).pipe(Effect.provide(BunContext.layer), BunRuntime.runMain);
