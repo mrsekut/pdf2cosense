@@ -1,6 +1,7 @@
-import { Effect, Schedule, Schema } from 'effect';
-import { GyazoError } from '../types.ts';
-import { AppConfig } from './AppConfig.ts';
+import { Config, Effect, Schedule, Schema } from 'effect';
+import * as Fs from '@effect/platform/FileSystem';
+import * as Path from '@effect/platform/Path';
+import { GyazoError } from '../pdfToJson/types.ts';
 
 // ===== Response Schemas =====
 
@@ -22,19 +23,13 @@ const ImageResponse = Schema.Struct({
 
 export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
   effect: Effect.gen(function* () {
-    const config = yield* AppConfig;
+    const gyazoToken = yield* Config.string('GYAZO_TOKEN');
+    const fs = yield* Fs.FileSystem;
+    const path = yield* Path.Path;
 
     const uploadOnce = (imagePath: string) =>
       Effect.gen(function* () {
-        const file = Bun.file(imagePath);
-        const exists = yield* Effect.tryPromise({
-          try: () => file.exists(),
-          catch: cause =>
-            new GyazoError({
-              message: `Failed to check image file: ${imagePath}`,
-              cause,
-            }),
-        });
+        const exists = yield* fs.exists(imagePath);
 
         if (!exists) {
           return yield* new GyazoError({
@@ -42,9 +37,16 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
           });
         }
 
+        const fileContent = yield* fs.readFile(imagePath);
+        const fileName = path.basename(imagePath);
+
         const formData = new FormData();
-        formData.append('access_token', config.gyazoToken);
-        formData.append('imagedata', file, imagePath.split('/').pop());
+        formData.append('access_token', gyazoToken);
+        formData.append(
+          'imagedata',
+          new Blob([new Uint8Array(fileContent)]),
+          fileName,
+        );
 
         const response = yield* Effect.tryPromise({
           try: () =>
@@ -86,7 +88,7 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
 
     const getOcrTextOnce = (imageId: string) =>
       Effect.gen(function* () {
-        const url = `https://api.gyazo.com/api/images/${imageId}?access_token=${config.gyazoToken}`;
+        const url = `https://api.gyazo.com/api/images/${imageId}?access_token=${gyazoToken}`;
 
         const response = yield* Effect.tryPromise({
           try: () => fetch(url),
@@ -131,19 +133,12 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
         return ocrText;
       });
 
-    // Retry schedules
-    const uploadRetrySchedule = Schedule.recurs(4).pipe(
-      Schedule.addDelay(() => '3 seconds'),
-    );
-
-    const ocrRetrySchedule = Schedule.recurs(9).pipe(
-      Schedule.addDelay(() => '10 seconds'),
-    );
-
     return {
       upload: (imagePath: string) =>
         uploadOnce(imagePath).pipe(
-          Effect.retry(uploadRetrySchedule),
+          Effect.retry(
+            Schedule.recurs(3).pipe(Schedule.addDelay(() => '3 seconds')),
+          ),
           Effect.tapError(e =>
             Effect.logWarning(
               `Gyazo upload failed after retries: ${e.message}`,
@@ -153,12 +148,16 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
 
       getOcrText: (imageId: string) =>
         getOcrTextOnce(imageId).pipe(
-          Effect.retry(ocrRetrySchedule),
+          Effect.retry(
+            Schedule.intersect(
+              Schedule.exponential('2 seconds'),
+              Schedule.recurs(5),
+            ),
+          ),
           Effect.tapError(e =>
             Effect.logWarning(`OCR fetch failed after retries: ${e.message}`),
           ),
         ),
     };
   }),
-  dependencies: [AppConfig.Default],
 }) {}

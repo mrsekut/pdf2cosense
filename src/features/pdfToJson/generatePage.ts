@@ -1,8 +1,6 @@
 import { Duration, Effect } from 'effect';
-import { Gyazo } from './services/index.ts';
+import { Gyazo } from '../Gyazo/index.ts';
 import { renderPage } from './renderPage.ts';
-import type { Page } from './types.ts';
-import { GyazoError } from './types.ts';
 
 /**
  * 画像から Page を生成
@@ -15,7 +13,7 @@ export const generatePage = (
   index: number,
   imagePath: string,
   totalPages: number,
-): Effect.Effect<Page, GyazoError, Gyazo> =>
+) =>
   Effect.gen(function* () {
     const gyazo = yield* Gyazo;
 

@@ -1,11 +1,9 @@
 import { Effect, Option } from 'effect';
-import * as Fs from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
-import { AppConfig, Gyazo } from './services/index.ts';
+import { AppConfig } from './services/index.ts';
 import { getPdfPaths, getImageDirs, getImages } from './files.ts';
 import { pdfToImages } from './pdfToImages.ts';
 import { generatePage } from './generatePage.ts';
-import { renderPage, createProfilePage, saveJson } from './renderPage.ts';
+import { createProfilePage, saveJson } from './renderPage.ts';
 import type { Page, Project } from './types.ts';
 
 /**
@@ -13,7 +11,6 @@ import type { Page, Project } from './types.ts';
  */
 export const pdfToJson = Effect.gen(function* () {
   const config = yield* AppConfig;
-  const path = yield* Path.Path;
 
   yield* Effect.logInfo('Starting pdf-to-json...');
 
@@ -51,8 +48,6 @@ export const pdfToJson = Effect.gen(function* () {
  */
 const dirToCosense = (dirPath: string, profile: Option.Option<string>) =>
   Effect.gen(function* () {
-    const gyazo = yield* Gyazo;
-
     yield* Effect.logInfo(`Processing directory: ${dirPath}`);
 
     // 画像一覧を取得

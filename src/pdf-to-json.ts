@@ -1,6 +1,7 @@
 import { Effect, Layer } from 'effect';
 import { BunContext } from '@effect/platform-bun';
-import { pdfToJson, AppConfig, Gyazo } from './features/pdfToJson/index.ts';
+import { pdfToJson, AppConfig } from './features/pdfToJson/index.ts';
+import { Gyazo } from './features/Gyazo/index.ts';
 
 const PdfToJsonLive = Layer.mergeAll(AppConfig.Default, Gyazo.Default);
 
