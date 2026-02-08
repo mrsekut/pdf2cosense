@@ -4,9 +4,9 @@ import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 
 /**
- * 複数 PDF を画像に変換
+ * PDF を画像に変換
  */
-export const pdfToImages = (pdfPaths: string[], workspaceDir: string) =>
+export const pdfToImages = (pdfPath: string) =>
   Effect.gen(function* () {
     const exist = yield* hasMutool;
     if (!exist) {
@@ -16,29 +16,18 @@ export const pdfToImages = (pdfPaths: string[], workspaceDir: string) =>
       });
     }
 
-    yield* Effect.logInfo(`Converting ${pdfPaths.length} PDF(s) to images...`);
-
-    const results = yield* Effect.forEach(pdfPaths, pdfPath =>
-      pdfToImagesOne(pdfPath, workspaceDir),
-    );
-
-    return results;
-  });
-
-/**
- * 1つの PDF を画像に変換
- */
-const pdfToImagesOne = (pdfPath: string, workspaceDir: string) =>
-  Effect.gen(function* () {
     const fs = yield* Fs.FileSystem;
     const path = yield* Path.Path;
 
-    // 出力ディレクトリ名を決定（PDF ファイル名から拡張子を除いたもの）
+    // 出力ディレクトリ名を決定（PDF と同じディレクトリに、PDF名のフォルダを作成）
+    const pdfDir = path.dirname(pdfPath);
     const pdfName = path.basename(pdfPath, '.pdf');
-    const outDir = path.join(workspaceDir, pdfName);
+    const outDir = path.join(pdfDir, pdfName);
 
     // 出力ディレクトリを作成
     yield* fs.makeDirectory(outDir, { recursive: true });
+
+    yield* Effect.logInfo(`Converting PDF to images: ${pdfPath}`);
 
     // mutool convert 実行
     const outPattern = path.join(outDir, '%d.png');

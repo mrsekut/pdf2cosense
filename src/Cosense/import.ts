@@ -119,7 +119,7 @@ const rawImportPages = async (
 };
 
 // GUI 経由でインポート（429 回避用）
-export const importViaGui = (projectName: string, jsonPath: string) =>
+export const importJsonViaGui = (projectName: string, jsonPath: string) =>
   Effect.gen(function* () {
     yield* Effect.logInfo(
       `Importing to /${projectName} from ${jsonPath} (GUI)`,
@@ -187,7 +187,7 @@ if (import.meta.main) {
   }
 
   // GUI ベースでインポート（429 回避）
-  importViaGui(projectName, jsonPath).pipe(
+  importJsonViaGui(projectName, jsonPath).pipe(
     Effect.provide(BunContext.layer),
     BunRuntime.runMain,
   );

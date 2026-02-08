@@ -1,7 +1,6 @@
 import { Effect, Schema } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
-import type { Page, Project } from './types.ts';
-import { PdfToJsonError } from './types.ts';
+import type { Page, Project } from '../types.ts';
 
 /**
  * Page オブジェクトを生成
@@ -122,3 +121,11 @@ export const saveJson = (filePath: string, project: Project) =>
       ),
     );
   });
+
+class PdfToJsonError extends Schema.TaggedError<PdfToJsonError>()(
+  'PdfToJsonError',
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {}
