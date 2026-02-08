@@ -10,10 +10,11 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        dotenv().ok();
+        // Load .env from parent directory
+        dotenv::from_path("../.env").ok();
         let gyazo_token = env::var("GYAZO_TOKEN")?;
         Ok(Self {
-            workspace_dir: PathBuf::from("./workspace"),
+            workspace_dir: PathBuf::from("../workspace"),
             profile: Some("mrsekut-merry-firends/mrsekut".to_string()),
             gyazo: Gyazo::new(gyazo_token),
         })

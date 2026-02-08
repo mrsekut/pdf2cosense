@@ -1,0 +1,21 @@
+{
+  "name": "pdf2cosense",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "pdf-to-json": "bun run src/cli.ts --json-only",
+    "upload": "bun run src/cli.ts --upload-only",
+    "//": "//",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "playwright": "^1.50.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.0"
+  }
+}

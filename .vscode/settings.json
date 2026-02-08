@@ -1,18 +1,17 @@
 {
-	"editor.formatOnType": true,
-	"editor.formatOnPaste": true,
-	"editor.formatOnSave": true,
-	"editor.tabSize": 2,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"typescript.preferences.importModuleSpecifier": "non-relative",
-	"terminal.integrated.profiles.osx": {
-		"devboxCompatibleShell": {
-			"path": "/bin/zsh",
-			"args": []
-		}
-	},
-	"terminal.integrated.defaultProfile.osx": "devboxCompatibleShell",
-	"[rust]": {
-		"editor.defaultFormatter": "rust-lang.rust-analyzer"
-	}
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "files.watcherExclude": {
+    "**/__generated__/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true
+  },
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
