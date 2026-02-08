@@ -1,7 +1,6 @@
-import { Effect } from 'effect';
+import { Effect, Array, Order, pipe } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
-import { PdfToJsonError } from './types.ts';
 
 /**
  * workspace 内の PDF ファイル一覧を取得
@@ -11,19 +10,8 @@ export const getPdfPaths = (workspaceDir: string) =>
     const fs = yield* Fs.FileSystem;
     const path = yield* Path.Path;
 
-    const entries = yield* fs.readDirectory(workspaceDir).pipe(
-      Effect.mapError(
-        cause =>
-          new PdfToJsonError({
-            message: `Failed to read directory: ${workspaceDir}`,
-            cause,
-          }),
-      ),
-    );
-
-    const pdfFiles = entries.filter(entry =>
-      entry.toLowerCase().endsWith('.pdf'),
-    );
+    const entries = yield* fs.readDirectory(workspaceDir);
+    const pdfFiles = entries.filter(e => e.toLowerCase().endsWith('.pdf'));
 
     return pdfFiles.map(file => path.join(workspaceDir, file));
   });
@@ -36,28 +24,15 @@ export const getImageDirs = (workspaceDir: string) =>
     const fs = yield* Fs.FileSystem;
     const path = yield* Path.Path;
 
-    const entries = yield* fs.readDirectory(workspaceDir).pipe(
-      Effect.mapError(
-        cause =>
-          new PdfToJsonError({
-            message: `Failed to read directory: ${workspaceDir}`,
-            cause,
-          }),
+    const entries = yield* fs.readDirectory(workspaceDir);
+    const fullPaths = entries.map(entry => path.join(workspaceDir, entry));
+
+    return yield* Effect.filter(fullPaths, fullPath =>
+      fs.stat(fullPath).pipe(
+        Effect.map(stat => stat.type === 'Directory'),
+        Effect.orElseSucceed(() => false),
       ),
     );
-
-    const dirs: string[] = [];
-
-    for (const entry of entries) {
-      const fullPath = path.join(workspaceDir, entry);
-      const stat = yield* fs.stat(fullPath).pipe(Effect.option);
-
-      if (stat._tag === 'Some' && stat.value.type === 'Directory') {
-        dirs.push(fullPath);
-      }
-    }
-
-    return dirs;
   });
 
 /**
@@ -68,23 +43,17 @@ export const getImages = (dirPath: string) =>
     const fs = yield* Fs.FileSystem;
     const path = yield* Path.Path;
 
-    const entries = yield* fs.readDirectory(dirPath).pipe(
-      Effect.mapError(
-        cause =>
-          new PdfToJsonError({
-            message: `Failed to read directory: ${dirPath}`,
-            cause,
-          }),
+    const entries = yield* fs.readDirectory(dirPath);
+
+    const pngFiles = pipe(
+      entries,
+      Array.filter(e => e.toLowerCase().endsWith('.png')),
+      Array.sort(
+        Order.mapInput(Order.number, (s: string) =>
+          parseInt(s.replace(/\.png$/i, ''), 10),
+        ),
       ),
     );
-
-    const pngFiles = entries
-      .filter(entry => entry.toLowerCase().endsWith('.png'))
-      .sort((a, b) => {
-        const numA = parseInt(a.replace('.png', ''), 10);
-        const numB = parseInt(b.replace('.png', ''), 10);
-        return numA - numB;
-      });
 
     return pngFiles.map(file => path.join(dirPath, file));
   });

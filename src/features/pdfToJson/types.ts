@@ -20,16 +20,3 @@ export class PdfToJsonError extends Schema.TaggedError<PdfToJsonError>()(
     cause: Schema.optional(Schema.Unknown),
   },
 ) {}
-
-export class GyazoError extends Schema.TaggedError<GyazoError>()('GyazoError', {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
-
-export class MutoolError extends Schema.TaggedError<MutoolError>()(
-  'MutoolError',
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
-) {}

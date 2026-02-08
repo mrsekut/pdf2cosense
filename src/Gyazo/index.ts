@@ -1,7 +1,6 @@
 import { Config, Effect, Schedule, Schema } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
-import { GyazoError } from '../features/pdfToJson/types.ts';
 
 // ===== Response Schemas =====
 
@@ -160,4 +159,9 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
         ),
     };
   }),
+}) {}
+
+class GyazoError extends Schema.TaggedError<GyazoError>()('GyazoError', {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
 }) {}

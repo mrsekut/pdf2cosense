@@ -14,23 +14,19 @@ export const pdfToJson = Effect.gen(function* () {
 
   yield* Effect.logInfo('Starting pdf-to-json...');
 
-  // 1. PDF ファイル一覧を取得
+  // PDF ファイル一覧を取得
   const pdfPaths = yield* getPdfPaths(config.workspaceDir);
   yield* Effect.logInfo(`Found ${pdfPaths.length} PDF file(s)`);
 
-  if (pdfPaths.length === 0) {
-    yield* Effect.logInfo('No PDF files found. Skipping conversion.');
-  } else {
-    // 2. PDF → 画像変換
-    yield* pdfToImages(pdfPaths, config.workspaceDir);
-    yield* Effect.logInfo('PDF to images conversion completed');
-  }
+  // PDF → 画像変換
+  yield* pdfToImages(pdfPaths, config.workspaceDir);
+  yield* Effect.logInfo(`Converted ${pdfPaths.length} PDF(s) to images`);
 
-  // 3. 画像ディレクトリ一覧を取得
+  // 画像ディレクトリ一覧を取得
   const imageDirs = yield* getImageDirs(config.workspaceDir);
   yield* Effect.logInfo(`Found ${imageDirs.length} image directory(s)`);
 
-  // 4. 各ディレクトリを処理して JSON 生成
+  // 各ディレクトリを処理して JSON 生成
   const jsonFiles: string[] = [];
 
   for (const dir of imageDirs) {
