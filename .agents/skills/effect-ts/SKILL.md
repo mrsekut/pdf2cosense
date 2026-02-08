@@ -10,13 +10,14 @@ Effect-TS is a functional TypeScript library providing typed effects, structured
 ## Quick Reference
 
 ```typescript
-import { Effect, Layer, Context, Fiber, Schedule, Cache, Scope } from "effect";
-import { Schema, JSONSchema } from "@effect/schema";
+import { Effect, Layer, Context, Fiber, Schedule, Cache, Scope } from 'effect';
+import { Schema, JSONSchema } from '@effect/schema';
 ```
 
 **Core Type Signature:**
+
 ```typescript
-Effect<Success, Error, Requirements>
+Effect<Success, Error, Requirements>;
 //      ↑        ↑       ↑
 //      |        |       └── Dependencies (provided via Layers)
 //      |        └── Expected errors (typed, must be handled)
@@ -29,16 +30,16 @@ Effect<Success, Error, Requirements>
 
 **LLM outputs often contain incorrect APIs.** Use this table to correct them:
 
-| Wrong (common in AI outputs) | Correct |
-|------------------------------|---------|
-| `Effect.cachedWithTTL(...)` | `Cache.make({ timeToLive: Duration })` |
-| `Effect.cachedInvalidateWithTTL(...)` | `cache.invalidate(key)` / `cache.invalidateAll()` |
-| `Effect.match(...)` | `Effect.either` + `Either.match`, or `Effect.catchTag` |
-| "thread-local storage" | "fiber-local storage" via `FiberRef` |
-| JSON Schema Draft 2020-12 | `@effect/schema` generates **Draft-07** |
-| fibers are "cancelled" | fibers are "terminated" or "interrupted" |
-| all queues have back-pressure | only **bounded** queues; sliding/dropping do not |
-| `--only=production` | `--omit=dev` (npm 7+) |
+| Wrong (common in AI outputs)          | Correct                                                |
+| ------------------------------------- | ------------------------------------------------------ |
+| `Effect.cachedWithTTL(...)`           | `Cache.make({ timeToLive: Duration })`                 |
+| `Effect.cachedInvalidateWithTTL(...)` | `cache.invalidate(key)` / `cache.invalidateAll()`      |
+| `Effect.match(...)`                   | `Effect.either` + `Either.match`, or `Effect.catchTag` |
+| "thread-local storage"                | "fiber-local storage" via `FiberRef`                   |
+| JSON Schema Draft 2020-12             | `@effect/schema` generates **Draft-07**                |
+| fibers are "cancelled"                | fibers are "terminated" or "interrupted"               |
+| all queues have back-pressure         | only **bounded** queues; sliding/dropping do not       |
+| `--only=production`                   | `--omit=dev` (npm 7+)                                  |
 
 ---
 
@@ -74,19 +75,19 @@ Fibers are lightweight virtual threads with **native interruption**:
 
 ```typescript
 // Fork a fiber
-const fiber = yield* Effect.fork(longRunningTask);
+const fiber = yield * Effect.fork(longRunningTask);
 
 // Interrupt it (e.g., when MCP client disconnects)
-yield* Fiber.interrupt(fiber);
+yield * Fiber.interrupt(fiber);
 
 // Structured concurrency: child fibers auto-terminate with parent
 const parent = Effect.gen(function* () {
-  yield* Effect.fork(backgroundTask);  // Auto-interrupted when parent ends
+  yield* Effect.fork(backgroundTask); // Auto-interrupted when parent ends
   yield* mainTask;
 });
 
 // Daemon fibers outlive their parent
-yield* Effect.forkDaemon(longLivedBackgroundTask);
+yield * Effect.forkDaemon(longLivedBackgroundTask);
 ```
 
 ---
@@ -97,32 +98,31 @@ yield* Effect.forkDaemon(longLivedBackgroundTask);
 
 ```typescript
 // First to succeed wins; other is automatically interrupted
-const result = yield* Effect.race(
-  fetchFromCache,
-  fetchFromDatabase
-);
+const result = yield * Effect.race(fetchFromCache, fetchFromDatabase);
 ```
 
 ### Effect.all with Concurrency Control
 
 ```typescript
 // Process 50 documents with max 5 concurrent
-const results = yield* Effect.all(documents.map(processDoc), {
-  concurrency: 5  // NOT a "worker pool" - limits concurrent tasks
-});
+const results =
+  yield *
+  Effect.all(documents.map(processDoc), {
+    concurrency: 5, // NOT a "worker pool" - limits concurrent tasks
+  });
 ```
 
 ### Queue Types
 
 ```typescript
 // Bounded - applies back-pressure (offer suspends when full)
-const bounded = yield* Queue.bounded<string>(100);
+const bounded = yield * Queue.bounded<string>(100);
 
 // Dropping - discards new items when full (no back-pressure)
-const dropping = yield* Queue.dropping<string>(100);
+const dropping = yield * Queue.dropping<string>(100);
 
 // Sliding - discards oldest items when full (no back-pressure)
-const sliding = yield* Queue.sliding<string>(100);
+const sliding = yield * Queue.sliding<string>(100);
 ```
 
 ---
@@ -133,7 +133,7 @@ Layers construct services without leaking dependencies:
 
 ```typescript
 // Define a service
-class Database extends Context.Tag("Database")<
+class Database extends Context.Tag('Database')<
   Database,
   { query: (sql: string) => Effect.Effect<Result> }
 >() {}
@@ -142,11 +142,11 @@ class Database extends Context.Tag("Database")<
 const DatabaseLive = Layer.effect(
   Database,
   Effect.gen(function* () {
-    const config = yield* Config;  // Dependency injected here
+    const config = yield* Config; // Dependency injected here
     return {
-      query: (sql) => Effect.tryPromise(() => runQuery(sql, config))
+      query: sql => Effect.tryPromise(() => runQuery(sql, config)),
     };
-  })
+  }),
 );
 
 // Provide to program
@@ -154,7 +154,7 @@ const runnable = program.pipe(Effect.provide(DatabaseLive));
 
 // For testing - swap implementation
 const DatabaseTest = Layer.succeed(Database, {
-  query: () => Effect.succeed(mockResult)
+  query: () => Effect.succeed(mockResult),
 });
 ```
 
@@ -167,7 +167,7 @@ const DatabaseTest = Layer.succeed(Database, {
 ```typescript
 const program = pipe(
   Effect.tryPromise(() => openConnection()),
-  Effect.ensuring(Console.log("Cleanup"))  // Runs on success, failure, OR interrupt
+  Effect.ensuring(Console.log('Cleanup')), // Runs on success, failure, OR interrupt
 );
 ```
 
@@ -175,9 +175,9 @@ const program = pipe(
 
 ```typescript
 const withConnection = Effect.acquireUseRelease(
-  Effect.tryPromise(() => db.connect()),     // Acquire
-  (conn) => Effect.tryPromise(() => conn.query("SELECT *")),  // Use
-  (conn) => Effect.promise(() => conn.close())  // Release (always runs)
+  Effect.tryPromise(() => db.connect()), // Acquire
+  conn => Effect.tryPromise(() => conn.query('SELECT *')), // Use
+  conn => Effect.promise(() => conn.close()), // Release (always runs)
 );
 ```
 
@@ -186,10 +186,10 @@ const withConnection = Effect.acquireUseRelease(
 ```typescript
 Effect.scoped(
   Effect.gen(function* () {
-    const file = yield* openFile("data.txt");  // Acquired
+    const file = yield* openFile('data.txt'); // Acquired
     const data = yield* file.read();
     return data;
-  })  // File automatically released when scope closes
+  }), // File automatically released when scope closes
 );
 ```
 
@@ -200,20 +200,22 @@ Effect.scoped(
 **There is no `Effect.cachedWithTTL`.** Use the Cache module:
 
 ```typescript
-import { Cache } from "effect";
+import { Cache } from 'effect';
 
-const cache = yield* Cache.make({
-  capacity: 100,
-  timeToLive: Duration.minutes(5),
-  lookup: (key: string) => fetchExpensiveData(key)
-});
+const cache =
+  yield *
+  Cache.make({
+    capacity: 100,
+    timeToLive: Duration.minutes(5),
+    lookup: (key: string) => fetchExpensiveData(key),
+  });
 
 // Use the cache
-const value = yield* cache.get("my-key");
+const value = yield * cache.get('my-key');
 
 // Invalidate
-yield* cache.invalidate("my-key");
-yield* cache.invalidateAll();
+yield * cache.invalidate('my-key');
+yield * cache.invalidateAll();
 ```
 
 ---
@@ -221,18 +223,18 @@ yield* cache.invalidateAll();
 ## Retry with Schedule
 
 ```typescript
-import { Schedule } from "effect";
+import { Schedule } from 'effect';
 
 // Retry 3 times with exponential backoff
-const policy = Schedule.exponential("100 millis").pipe(
-  Schedule.intersect(Schedule.recurs(3))
+const policy = Schedule.exponential('100 millis').pipe(
+  Schedule.intersect(Schedule.recurs(3)),
 );
 
 const robust = Effect.retry(unstableOperation, policy);
 
 // Retry until condition
 const untilSuccess = Effect.retry(operation, {
-  until: (err) => err.code === "RATE_LIMITED"
+  until: err => err.code === 'RATE_LIMITED',
 });
 ```
 
@@ -243,11 +245,11 @@ const untilSuccess = Effect.retry(operation, {
 `@effect/schema` generates **JSON Schema Draft-07** (not 2020-12):
 
 ```typescript
-import { Schema, JSONSchema } from "@effect/schema";
+import { Schema, JSONSchema } from '@effect/schema';
 
 const User = Schema.Struct({
   id: Schema.String,
-  age: Schema.Number.pipe(Schema.positive())
+  age: Schema.Number.pipe(Schema.positive()),
 });
 
 // Generate JSON Schema (Draft-07)
@@ -268,30 +270,30 @@ const json = Schema.encodeSync(User)(user);
 Effect has native OpenTelemetry integration:
 
 ```typescript
-import { NodeSdk } from "@effect/opentelemetry";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { NodeSdk } from '@effect/opentelemetry';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
 // Add tracing to any effect
-const traced = Effect.withSpan("processRequest")(myEffect);
+const traced = Effect.withSpan('processRequest')(myEffect);
 
 // Logging with context
-yield* Effect.log("Processing request");
-yield* Effect.annotateLogs("requestId", "abc-123");
+yield * Effect.log('Processing request');
+yield * Effect.annotateLogs('requestId', 'abc-123');
 
 // FiberRef for fiber-local context propagation
-const RequestId = FiberRef.unsafeMake<string>("");
-yield* FiberRef.set(RequestId, "req-456");
+const RequestId = FiberRef.unsafeMake<string>('');
+yield * FiberRef.set(RequestId, 'req-456');
 ```
 
 ---
 
 ## When NOT to Use Effect
 
-| Scenario | Recommendation |
-|----------|----------------|
-| Simple MCP tool (< 100 LOC) | Use FastMCP or vanilla SDK |
-| Team unfamiliar with FP | Steep learning curve; consider NestJS |
-| Bundle size critical | Effect adds 15-25kb gzipped minimum |
+| Scenario                         | Recommendation                         |
+| -------------------------------- | -------------------------------------- |
+| Simple MCP tool (< 100 LOC)      | Use FastMCP or vanilla SDK             |
+| Team unfamiliar with FP          | Steep learning curve; consider NestJS  |
+| Bundle size critical             | Effect adds 15-25kb gzipped minimum    |
 | Existing NestJS/TypeORM codebase | Impedance mismatch with class-based DI |
 
 ---
@@ -307,12 +309,12 @@ const searchTool = Effect.gen(function* () {
   const results = yield* db.query(args.query);
   return formatResults(results);
 }).pipe(
-  Effect.catchTag("ParseError", () =>
-    Effect.fail({ code: -32602, message: "Invalid params" })
+  Effect.catchTag('ParseError', () =>
+    Effect.fail({ code: -32602, message: 'Invalid params' }),
   ),
-  Effect.catchTag("DatabaseError", () =>
-    Effect.fail({ code: -32603, message: "Internal error" })
-  )
+  Effect.catchTag('DatabaseError', () =>
+    Effect.fail({ code: -32603, message: 'Internal error' }),
+  ),
 );
 ```
 
@@ -327,7 +329,7 @@ const handleRequest = (request: MCPRequest) =>
       const tempFile = yield* createTempFile();
       const result = yield* processRequest(request, tempFile);
       return result;
-    })
+    }),
   );
 ```
 

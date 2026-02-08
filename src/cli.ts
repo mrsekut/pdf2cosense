@@ -5,8 +5,8 @@ import * as Path from '@effect/platform/Path';
 import { Terminal } from '@effect/platform';
 import { Effect, Schema, Duration } from 'effect';
 import { runPdfToJson } from './pdf-to-json.ts';
-import { createProject } from './features/createProject/index.ts';
-import { importViaGui } from './features/import/import.ts';
+import { createProject } from './features/Cosense/index.ts';
+import { importViaGui } from './features/Cosense/import.ts';
 
 // Main command
 const mainCommand = Command.make('pdf2cosense', {}, () =>
@@ -20,7 +20,7 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
     // 2. 各 JSON に対してプロジェクト作成
     yield* Effect.forEach(
       jsonFiles,
-      jsonFile =>
+      (jsonFile: string) =>
         Effect.gen(function* () {
           const fileName = yield* getFileName(jsonFile);
           const pageCount = yield* getPageCount(jsonFile);
