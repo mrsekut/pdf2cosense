@@ -12,3 +12,9 @@ node_modules
 /pdf-to-json/target
 /target
 bun.lockb
+
+# Playwright
+browser-profile/
+
+# Auth
+auth.json
