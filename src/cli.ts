@@ -1,20 +1,19 @@
 import { Command } from '@effect/cli';
 import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as Path from '@effect/platform/Path';
-import { Terminal } from '@effect/platform';
 import { Effect, Layer } from 'effect';
 import { getPdfPaths, getImageDirs } from './files/files.ts';
 import { pdfToImages } from './features/pdfToImages/index.ts';
 import { imageDirToProject } from './features/imageDirToProject/index.ts';
 import { AppConfig } from './features/imageToJson/AppConfig.ts';
 import { Gyazo } from './Gyazo/index.ts';
+import { IsbnSearch, NdlLayer } from './IsbnSearch/index.ts';
 
 const WORKSPACE_DIR = './workspace';
 
 // Main command
 const mainCommand = Command.make('pdf2cosense', {}, () =>
   Effect.gen(function* () {
-    const terminal = yield* Terminal.Terminal;
     const path = yield* Path.Path;
 
     // 1. PDF があれば画像に変換
@@ -39,17 +38,30 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
       imageDir =>
         Effect.gen(function* () {
           const dirName = path.basename(imageDir);
+          yield* Effect.logInfo(`Searching ISBN for: ${dirName}`);
 
-          // ISBN を問い合わせ
-          yield* terminal.display(`Enter ISBN for ${dirName}: `);
-          const isbn = yield* terminal.readLine;
+          // タイトルから ISBN を検索
+          const isbnSearch = yield* IsbnSearch;
+          const result = yield* isbnSearch.searchByTitle(dirName).pipe(
+            Effect.catchTag('IsbnNotFoundError', e => {
+              return Effect.logWarning(
+                `ISBN not found for "${e.title}", skipping...`,
+              ).pipe(Effect.as(null));
+            }),
+            Effect.catchTag('ApiError', e => {
+              return Effect.logError(`API error: ${e.message}`).pipe(
+                Effect.as(null),
+              );
+            }),
+          );
 
-          if (!isbn.trim()) {
-            yield* Effect.logWarning('Skipped (no ISBN provided)');
-            return;
-          }
+          if (!result) return;
 
-          yield* imageDirToProject(imageDir, isbn.trim());
+          yield* Effect.logInfo(
+            `Found: "${result.title}" by ${result.authors.join(', ')} (ISBN: ${result.isbn})`,
+          );
+
+          yield* imageDirToProject(imageDir, result.isbn);
         }),
       { concurrency: 1, discard: true },
     );
@@ -59,7 +71,7 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
 );
 
 // Layer
-const MainLayer = Layer.mergeAll(AppConfig.Default, Gyazo.Default);
+const MainLayer = Layer.mergeAll(AppConfig.Default, Gyazo.Default, NdlLayer);
 
 // CLI entry point
 const cli = Command.run(mainCommand, {
