@@ -1,7 +1,7 @@
 import { Config, Effect, Schedule, Schema } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
-import { GyazoError } from '../pdfToJson/types.ts';
+import { GyazoError } from '../features/pdfToJson/types.ts';
 
 // ===== Response Schemas =====
 

@@ -4,7 +4,7 @@ import { pdfToImages } from './pdfToImages.ts';
 import { generatePage } from './generatePage.ts';
 import { createProfilePage, saveJson } from './renderPage.ts';
 import type { Page, Project } from './types.ts';
-import { AppConfig } from './services/AppConfig.ts';
+import { AppConfig } from './AppConfig.ts';
 
 /**
  * メイン処理: PDF → 画像 → Gyazo → OCR → JSON

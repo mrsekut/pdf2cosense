@@ -5,8 +5,8 @@ import * as Path from '@effect/platform/Path';
 import { Terminal } from '@effect/platform';
 import { Effect, Schema, Duration } from 'effect';
 import { runPdfToJson } from './pdf-to-json.ts';
-import { createProject } from './features/Cosense/index.ts';
-import { importViaGui } from './features/Cosense/import.ts';
+import { createProject } from './Cosense/index.ts';
+import { importViaGui } from './Cosense/import.ts';
 
 // Main command
 const mainCommand = Command.make('pdf2cosense', {}, () =>

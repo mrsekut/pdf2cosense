@@ -1,5 +1,5 @@
 import { Duration, Effect } from 'effect';
-import { Gyazo } from '../Gyazo/index.ts';
+import { Gyazo } from '../../Gyazo/index.ts';
 import { renderPage } from './renderPage.ts';
 
 /**
