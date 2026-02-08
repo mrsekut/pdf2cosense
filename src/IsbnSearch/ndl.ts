@@ -6,7 +6,7 @@ import {
   type BookInfo,
 } from './service.ts';
 
-const searchByTitle = (
+export const ndlSearchByTitle = (
   title: string,
 ): Effect.Effect<BookInfo, IsbnNotFoundError | ApiError> =>
   Effect.gen(function* () {
@@ -46,5 +46,5 @@ const searchByTitle = (
   });
 
 export const NdlLayer = Layer.succeed(IsbnSearch, {
-  searchByTitle,
+  searchByTitle: ndlSearchByTitle,
 });

@@ -7,7 +7,7 @@ import { pdfToImages } from './features/pdfToImages/index.ts';
 import { imageDirToProject } from './features/imageDirToProject/index.ts';
 import { AppConfig } from './features/imageToJson/AppConfig.ts';
 import { Gyazo } from './Gyazo/index.ts';
-import { IsbnSearch, NdlLayer } from './IsbnSearch/index.ts';
+import { IsbnSearch, FallbackIsbnSearchLayer } from './IsbnSearch/index.ts';
 
 const WORKSPACE_DIR = './workspace';
 
@@ -71,7 +71,11 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
 );
 
 // Layer
-const MainLayer = Layer.mergeAll(AppConfig.Default, Gyazo.Default, NdlLayer);
+const MainLayer = Layer.mergeAll(
+  AppConfig.Default,
+  Gyazo.Default,
+  FallbackIsbnSearchLayer,
+);
 
 // CLI entry point
 const cli = Command.run(mainCommand, {

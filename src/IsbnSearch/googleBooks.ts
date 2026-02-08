@@ -35,7 +35,7 @@ const GoogleBooksErrorResponse = Schema.Struct({
   }),
 });
 
-const searchByTitle = (
+export const googleBooksSearchByTitle = (
   title: string,
 ): Effect.Effect<BookInfo, IsbnNotFoundError | ApiError> =>
   Effect.gen(function* () {
@@ -94,5 +94,5 @@ const searchByTitle = (
   });
 
 export const GoogleBooksLayer = Layer.succeed(IsbnSearch, {
-  searchByTitle,
+  searchByTitle: googleBooksSearchByTitle,
 });
