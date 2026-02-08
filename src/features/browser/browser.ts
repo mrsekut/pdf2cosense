@@ -4,13 +4,14 @@ import { chromium, type BrowserContext } from 'playwright';
 const DEFAULT_PROFILE_DIR = './browser-profile';
 
 // ブラウザ起動
-export const launch = () =>
+export const launch = (storageStatePath?: string) =>
   Effect.tryPromise({
     try: async () => {
       return await chromium.launchPersistentContext(DEFAULT_PROFILE_DIR, {
         headless: false,
         channel: 'chrome',
         args: ['--disable-blink-features=AutomationControlled'],
+        ...(storageStatePath && { storageState: storageStatePath }),
       });
     },
     catch: cause =>
