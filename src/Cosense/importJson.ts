@@ -146,8 +146,10 @@ const uploadViaGui = async (
   // Import Pages ボタンをクリック
   await page.getByRole('button', { name: 'Import Pages' }).click();
 
-  // 完了を待つ（ボタンが再度 disabled になるか、成功メッセージを待つ）
-  await page.waitForTimeout(3000);
+  // 完了を待つ: プロジェクトトップページに遷移するまで待機
+  await page.waitForURL(`https://scrapbox.io/${projectName}/`, {
+    timeout: 60000, // 最大1分待機
+  });
 };
 
 class ImportError extends Schema.TaggedError<ImportError>()('ImportError', {
