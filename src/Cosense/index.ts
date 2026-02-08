@@ -1,2 +1,2 @@
 export * from './createProject.ts';
-export * from './import.ts';
+export * from './importJson.ts';

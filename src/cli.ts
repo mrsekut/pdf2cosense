@@ -3,9 +3,9 @@ import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as Path from '@effect/platform/Path';
 import { Terminal } from '@effect/platform';
 import { Effect, Layer } from 'effect';
-import { getPdfPaths, getImageDirs } from './features/pdfToJson/files.ts';
+import { getPdfPaths, getImageDirs } from './files/files.ts';
 import { pdfToImages } from './features/pdfToImages/index.ts';
-import { imageDirToProject } from './features/pdfToJson/imageDirToProject.ts';
+import { imageDirToProject } from './features/imageDirToProject/index.ts';
 import { AppConfig } from './features/imageToJson/AppConfig.ts';
 import { Gyazo } from './Gyazo/index.ts';
 

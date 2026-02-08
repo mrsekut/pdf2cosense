@@ -1,26 +1,17 @@
-import { Effect, Schema, Array as A, Duration } from 'effect';
+import { Effect, Schema, Array, Duration } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
-import { BunContext, BunRuntime } from '@effect/platform-bun';
 import type { BrowserContext } from 'playwright';
-import * as auth from '../browser/auth';
 import * as browser from '../browser/browser';
+import { CosenseJson, Page } from './types';
 
 const BATCH_SIZE = 100;
 
-// ページ型
-const CosensePage = Schema.Struct({
-  title: Schema.String,
-  lines: Schema.Array(Schema.String),
-});
-
-const CosenseJson = Schema.Struct({
-  pages: Schema.Array(CosensePage),
-});
-
-type CosensePage = typeof CosensePage.Type;
-
 // JSON ファイルからインポート
-export const importFromFile = (projectName: string, jsonPath: string) =>
+export const importJsonViaApi = (
+  projectName: string,
+  jsonPath: string,
+  sid: string,
+) =>
   Effect.gen(function* () {
     yield* Effect.logInfo(`Importing to /${projectName} from ${jsonPath}`);
 
@@ -33,9 +24,6 @@ export const importFromFile = (projectName: string, jsonPath: string) =>
 
     yield* Effect.logInfo(`Found ${data.pages.length} pages`);
 
-    // 認証情報取得
-    const sid = yield* auth.getSid();
-
     // バッチ処理でインポート
     yield* importPagesBatched(projectName, data.pages, sid);
 
@@ -45,11 +33,11 @@ export const importFromFile = (projectName: string, jsonPath: string) =>
 // バッチ処理でインポート
 const importPagesBatched = (
   projectName: string,
-  pages: readonly CosensePage[],
+  pages: readonly Page[],
   sid: string,
 ) =>
   Effect.gen(function* () {
-    const chunks = A.chunksOf(pages, BATCH_SIZE);
+    const chunks = Array.chunksOf(pages, BATCH_SIZE);
 
     yield* Effect.forEach(
       chunks,
@@ -69,56 +57,49 @@ const importPagesBatched = (
   });
 
 // ページをインポート
-const importPages = (projectName: string, pages: CosensePage[], sid: string) =>
+const importPages = (projectName: string, pages: Page[], sid: string) =>
   Effect.tryPromise({
-    try: () => rawImportPages(projectName, pages, sid),
+    try: async () => {
+      // CSRF トークン取得
+      const csrfRes = await fetch('https://scrapbox.io/api/users/me', {
+        headers: { Cookie: `connect.sid=${sid}` },
+      });
+      const csrfJson = (await csrfRes.json()) as { csrfToken: string };
+
+      // FormData 作成
+      const formData = new FormData();
+      const file = new File([JSON.stringify({ pages })], 'import.json', {
+        type: 'application/octet-stream',
+      });
+      formData.append('import-file', file);
+      formData.append('name', 'import.json');
+
+      // インポート実行
+      const res = await fetch(
+        `https://scrapbox.io/api/page-data/import/${projectName}.json`,
+        {
+          method: 'POST',
+          headers: {
+            Cookie: `connect.sid=${sid}`,
+            Accept: 'application/json, text/plain, */*',
+            'X-CSRF-TOKEN': csrfJson.csrfToken,
+          },
+          body: formData,
+        },
+      );
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${body}`);
+      }
+
+      return (await res.json()) as { message: string };
+    },
     catch: cause =>
       new ImportError({ message: 'Failed to import pages', cause }),
   });
 
-// 実際の API 呼び出し
-const rawImportPages = async (
-  projectName: string,
-  pages: CosensePage[],
-  sid: string,
-) => {
-  // CSRF トークン取得
-  const csrfRes = await fetch('https://scrapbox.io/api/users/me', {
-    headers: { Cookie: `connect.sid=${sid}` },
-  });
-  const csrfJson = (await csrfRes.json()) as { csrfToken: string };
-
-  // FormData 作成
-  const formData = new FormData();
-  const file = new File([JSON.stringify({ pages })], 'import.json', {
-    type: 'application/octet-stream',
-  });
-  formData.append('import-file', file);
-  formData.append('name', 'import.json');
-
-  // インポート実行
-  const res = await fetch(
-    `https://scrapbox.io/api/page-data/import/${projectName}.json`,
-    {
-      method: 'POST',
-      headers: {
-        Cookie: `connect.sid=${sid}`,
-        Accept: 'application/json, text/plain, */*',
-        'X-CSRF-TOKEN': csrfJson.csrfToken,
-      },
-      body: formData,
-    },
-  );
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`${res.status} ${res.statusText}: ${body}`);
-  }
-
-  return (await res.json()) as { message: string };
-};
-
-// GUI 経由でインポート（429 回避用）
+// GUI 経由でインポート
 export const importJsonViaGui = (projectName: string, jsonPath: string) =>
   Effect.gen(function* () {
     yield* Effect.logInfo(
@@ -173,22 +154,3 @@ class ImportError extends Schema.TaggedError<ImportError>()('ImportError', {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
-
-// 直接実行時
-if (import.meta.main) {
-  const projectName = process.argv[2];
-  const jsonPath = process.argv[3];
-
-  if (!projectName || !jsonPath) {
-    console.error(
-      'Usage: bun run src/features/import/import.ts <projectName> <jsonPath>',
-    );
-    process.exit(1);
-  }
-
-  // GUI ベースでインポート（429 回避）
-  importJsonViaGui(projectName, jsonPath).pipe(
-    Effect.provide(BunContext.layer),
-    BunRuntime.runMain,
-  );
-}
