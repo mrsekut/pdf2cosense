@@ -9,12 +9,11 @@ node_modules
 
 /workspace/*
 
-/pdf-to-json/target
-/target
 bun.lockb
 
 # Playwright
 browser-profile/
+.playwright-mcp/
 
 # Auth
 auth.json
