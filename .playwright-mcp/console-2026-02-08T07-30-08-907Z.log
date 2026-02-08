@@ -1,0 +1,36 @@
+[   35376ms] [ERROR] Refused to apply style from 'https://scrapbox.io/api/code/icons/settings/style.css' because its MIME type ('application/json') is not a supported stylesheet MIME type, and strict MIME checking is enabled. @ https://scrapbox.io/icons/:0
+[   35463ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/code/icons/mrsekut/script.js?1770535843863:0
+[   35464ms] [ERROR] AxiosError: Request failed with status code 404
+    at settle (https://scrapbox.io/assets/index.js:2:2000041)
+    at XMLHttpRequest.onloadend (https://scrapbox.io/assets/index.js:2:2005449)
+    at Axios.request (https://scrapbox.io/assets/index.js:2:2015205)
+    at async eo.get (https://scrapbox.io/assets/index.js:2:2022458)
+    at async UserScript.reload (https://scrapbox.io/assets/index.js:2:2229719) @ https://scrapbox.io/assets/index.js:1
+[   35632ms] [ERROR] Refused to apply style from 'https://scrapbox.io/api/code/icons/mrsekut/style.css' because its MIME type ('application/json') is not a supported stylesheet MIME type, and strict MIME checking is enabled. @ https://scrapbox.io/icons/:0
+[   35900ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/%E4%BD%90%E8%97%A4%E5%85%89/icon:0
+[   35901ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/mrsekut/icon:0
+[   35901ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/ettsuetsu/icon:0
+[   35902ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/akix/icon:0
+[   39636ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://scrapbox.io/api/pages/icons/694ca226e2240f469537d2b6/accessed:0
+[   39638ms] AxiosError: Request failed with status code 403
+    at settle (https://scrapbox.io/assets/index.js:2:2000041)
+    at XMLHttpRequest.onloadend (https://scrapbox.io/assets/index.js:2:2005449)
+    at Axios.request (https://scrapbox.io/assets/index.js:2:2015205)
+[   39638ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/shohei/icon:0
+[   39639ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/matsu4ki/icon:0
+[   39641ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/yoseio/icon:0
+[   39656ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/%E8%97%A4%E6%9C%AC/icon:0
+[   39781ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/Kait/icon:0
+[   39784ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/req/icon:0
+[   39991ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/mrsekut/icon:0
+[   40620ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/phoooutty/icon:0
+[   40620ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/Gitefu/icon:0
+[   40620ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/2shiori17/icon:0
+[   40621ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/kato/icon:0
+[   40621ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/ikki/icon:0
+[   40687ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/mrsekut/icon:0
+[   40754ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/ytnk3a/icon:0
+[   53931ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/tisogai/icon:0
+[   53932ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/miki/icon:0
+[   53932ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://scrapbox.io/api/pages/icons/takumin/icon:0
+[   55492ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://www.redditinc.com/assets/images/site/reddit-logo.png:0

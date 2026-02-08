@@ -3,9 +3,10 @@ import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 import { Terminal } from '@effect/platform';
-import { Effect, Schema } from 'effect';
+import { Effect, Schema, Duration } from 'effect';
 import { runPdfToJson } from './pdf-to-json.ts';
 import { createProject } from './features/createProject/index.ts';
+import { importViaGui } from './features/import/import.ts';
 
 // Main command
 const mainCommand = Command.make('pdf2cosense', {}, () =>
@@ -36,9 +37,11 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
           }
 
           // プロジェクト作成
-          yield* createProject(isbn.trim());
+          const projectName = yield* createProject(isbn.trim());
 
-          // TODO: 3. インポート（Phase 3 で実装）
+          // 3. インポート（GUI経由で429回避）
+          yield* Effect.sleep(Duration.seconds(3));
+          yield* importViaGui(projectName, jsonFile);
         }),
       { discard: true },
     );
