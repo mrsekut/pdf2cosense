@@ -2,14 +2,14 @@ import { Schema } from 'effect';
 
 // ===== Domain Types =====
 
-export interface Page {
+export type Page = {
   title: string;
   lines: string[];
-}
+};
 
-export interface Project {
+export type Project = {
   pages: Page[];
-}
+};
 
 // ===== Error Types =====
 
