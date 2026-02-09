@@ -11,7 +11,7 @@ export const createProject = (isbn: string) =>
     const projectName = `${config.projectPrefix}-${isbn}`;
     yield* Effect.logInfo(`Creating project: ${projectName}`);
 
-    const context = yield* browser.launch('auth.json');
+    const context = yield* browser.launch();
 
     yield* Effect.tryPromise({
       try: () => fillAndSubmitForm(context, projectName),

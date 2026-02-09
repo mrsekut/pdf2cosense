@@ -106,7 +106,7 @@ export const importJsonViaGui = (projectName: string, jsonPath: string) =>
       `Importing to /${projectName} from ${jsonPath} (GUI)`,
     );
 
-    const context = yield* browser.launch('auth.json');
+    const context = yield* browser.launch();
 
     yield* Effect.tryPromise({
       try: () => uploadViaGui(context, projectName, jsonPath),

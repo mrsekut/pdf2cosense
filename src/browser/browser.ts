@@ -4,14 +4,13 @@ import { chromium, type BrowserContext } from 'playwright';
 const DEFAULT_PROFILE_DIR = './browser-profile';
 
 // ブラウザ起動
-export const launch = (storageStatePath?: string) =>
+// 認証情報はブラウザプロファイル(browser-profile/)に保持される
+export const launch = () =>
   Effect.tryPromise({
     try: async () => {
       return await chromium.launchPersistentContext(DEFAULT_PROFILE_DIR, {
         headless: false,
-        channel: 'chrome',
         args: ['--disable-blink-features=AutomationControlled'],
-        ...(storageStatePath && { storageState: storageStatePath }),
       });
     },
     catch: cause =>
@@ -24,14 +23,6 @@ export const close = (context: BrowserContext) =>
     try: () => context.close(),
     catch: cause =>
       new BrowserError({ message: 'Failed to close browser', cause }),
-  });
-
-// 認証情報保存
-export const saveStorageState = (context: BrowserContext, path: string) =>
-  Effect.tryPromise({
-    try: () => context.storageState({ path }),
-    catch: cause =>
-      new BrowserError({ message: 'Failed to save storage state', cause }),
   });
 
 class BrowserError extends Schema.TaggedError<BrowserError>()('BrowserError', {
