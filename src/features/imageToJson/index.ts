@@ -39,9 +39,10 @@ export const imagesToJson = (imageDir: string) =>
 
     yield* Effect.logInfo(`Generated ${pages.length} page(s)`);
 
-    // プロファイルページを追加
-    const profilePage = yield* createProfilePage(config.profile);
-    const pagesWithProfile = [profilePage, ...pages];
+    // プロファイルページを追加（設定されている場合のみ）
+    const pagesWithProfile = config.profile
+      ? [yield* createProfilePage(config.profile), ...pages]
+      : pages;
 
     // JSON 保存
     const jsonPath = `${imageDir}-ocr.json`;

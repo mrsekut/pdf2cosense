@@ -2,11 +2,13 @@ import { Effect, Schema } from 'effect';
 import type { BrowserContext } from 'playwright';
 import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as browser from '../browser/browser';
+import { AppConfig } from '../features/imageToJson/AppConfig';
 
 // プロジェクト作成
 export const createProject = (isbn: string) =>
   Effect.gen(function* () {
-    const projectName = `mrsekut-book-${isbn}`;
+    const config = yield* AppConfig;
+    const projectName = `${config.projectPrefix}-${isbn}`;
     yield* Effect.logInfo(`Creating project: ${projectName}`);
 
     const context = yield* browser.launch('auth.json');
@@ -59,6 +61,7 @@ if (import.meta.main) {
   }
 
   createProject(isbn).pipe(
+    Effect.provide(AppConfig.Default),
     Effect.provide(BunContext.layer),
     BunRuntime.runMain,
   );
