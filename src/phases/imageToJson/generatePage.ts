@@ -1,5 +1,5 @@
 import { Effect } from 'effect';
-import { Gyazo } from '../../Gyazo/index.ts';
+import { Gyazo } from '../../services/Gyazo/index.ts';
 
 /**
  * Gyazo にアップロードして imageId を返す
@@ -34,13 +34,15 @@ export const fetchOcrText = (
     const tag = `[${index + 1}/${totalPages}]`;
 
     yield* Effect.logInfo(`${tag} Fetching OCR text...`);
-    const ocrText = yield* gyazo.getOcrText(imageId).pipe(
-      Effect.catchAll(() =>
-        Effect.logWarning(
-          `${tag} OCR unavailable, continuing without OCR text`,
-        ).pipe(Effect.as('')),
-      ),
-    );
+    const ocrText = yield* gyazo
+      .getOcrText(imageId)
+      .pipe(
+        Effect.catchAll(() =>
+          Effect.logWarning(
+            `${tag} OCR unavailable, continuing without OCR text`,
+          ).pipe(Effect.as('')),
+        ),
+      );
     yield* Effect.logInfo(`${tag} OCR done`);
 
     return ocrText;

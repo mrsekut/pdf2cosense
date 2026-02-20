@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect';
-import type { Page } from '../../Cosense/types';
+import type { Page } from '../../services/Cosense/types.ts';
 
 /**
  * Cosense API からプロファイルページを取得

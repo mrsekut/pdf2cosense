@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import * as Fs from '@effect/platform/FileSystem';
-import type { Page, Project } from '../../Cosense/types.ts';
+import type { Page, Project } from '../../services/Cosense/types.ts';
 
 /**
  * Page オブジェクトを生成

@@ -1,9 +1,9 @@
 import { Duration, Effect, pipe, Array, Order } from 'effect';
-import { AppConfig } from './AppConfig.ts';
+import { AppConfig } from '../../config/AppConfig.ts';
 import { uploadImage, fetchOcrText } from './generatePage.ts';
 import { renderPage, saveJson } from './renderPage.ts';
 import { createProfilePage } from './createProfilePage.ts';
-import type { Project } from '../../Cosense/types.ts';
+import type { Project } from '../../services/Cosense/types.ts';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 

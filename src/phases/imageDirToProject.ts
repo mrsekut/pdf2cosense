@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
-import { imagesToJson } from '../imageToJson/index.ts';
-import * as Cosense from '../../Cosense/index.ts';
+import { imagesToJson } from './imageToJson/index.ts';
+import * as Cosense from '../services/Cosense/index.ts';
 
 /**
  * 画像ディレクトリから Cosense プロジェクトまで処理

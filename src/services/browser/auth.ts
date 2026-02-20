@@ -27,7 +27,9 @@ export const login = () =>
 
     yield* browser.close(context);
 
-    yield* Effect.logInfo('Authentication completed. Session saved to browser profile.');
+    yield* Effect.logInfo(
+      'Authentication completed. Session saved to browser profile.',
+    );
   });
 
 // ヘルパー: Enter キー待機

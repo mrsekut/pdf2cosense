@@ -2,12 +2,15 @@ import { Command } from '@effect/cli';
 import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as Path from '@effect/platform/Path';
 import { Effect, Layer } from 'effect';
-import { getPdfPaths, getImageDirs } from './files/files.ts';
-import { pdfToImages } from './features/pdfToImages/index.ts';
-import { imageDirToProject } from './features/imageDirToProject/index.ts';
-import { AppConfig } from './features/imageToJson/AppConfig.ts';
-import { Gyazo } from './Gyazo/index.ts';
-import { IsbnSearch, FallbackIsbnSearchLayer } from './IsbnSearch/index.ts';
+import { getPdfPaths, getImageDirs } from './workspace/index.ts';
+import { pdfToImages } from './phases/pdfToImages.ts';
+import { imageDirToProject } from './phases/imageDirToProject.ts';
+import { AppConfig } from './config/AppConfig.ts';
+import { Gyazo } from './services/Gyazo/index.ts';
+import {
+  IsbnSearch,
+  FallbackIsbnSearchLayer,
+} from './services/IsbnSearch/index.ts';
 
 const WORKSPACE_DIR = './workspace';
 

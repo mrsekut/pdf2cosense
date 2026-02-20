@@ -2,7 +2,7 @@ import { Effect, Schema } from 'effect';
 import type { BrowserContext } from 'playwright';
 import { BunContext, BunRuntime } from '@effect/platform-bun';
 import * as browser from '../browser/browser';
-import { AppConfig } from '../features/imageToJson/AppConfig';
+import { AppConfig } from '../../config/AppConfig.ts';
 
 // プロジェクト作成
 export const createProject = (isbn: string) =>
