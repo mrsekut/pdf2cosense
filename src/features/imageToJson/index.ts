@@ -1,7 +1,7 @@
-import { Effect, Option, pipe, Array, Order } from 'effect';
+import { Duration, Effect, pipe, Array, Order } from 'effect';
 import { AppConfig } from './AppConfig.ts';
-import { generatePage } from './generatePage.ts';
-import { saveJson } from './renderPage.ts';
+import { uploadImage, fetchOcrText } from './generatePage.ts';
+import { renderPage, saveJson } from './renderPage.ts';
 import { createProfilePage } from './createProfilePage.ts';
 import type { Project } from '../../Cosense/types.ts';
 import * as Fs from '@effect/platform/FileSystem';
@@ -20,21 +20,29 @@ export const imagesToJson = (imageDir: string) =>
     const images = yield* getImages(imageDir);
     yield* Effect.logInfo(`Found ${images.length} image(s)`);
 
-    // 順次処理でページ生成（rate limit 対策）
-    const pages = yield* pipe(
-      Effect.forEach(
-        images,
-        (image, index) =>
-          pipe(
-            generatePage(index, image, images.length),
-            Effect.tap(() =>
-              Effect.logDebug(`Processed page ${index + 1}/${images.length}`),
-            ),
-            Effect.option,
-          ),
-        { concurrency: 1 },
-      ),
-      Effect.map(results => results.filter(Option.isSome).map(r => r.value)),
+    // Phase 1: Upload
+    yield* Effect.logInfo('Phase 1: Uploading images...');
+    const imageIds = yield* Effect.forEach(
+      images,
+      (image, index) => uploadImage(index, image, images.length),
+      { concurrency: 50 },
+    );
+
+    // Phase 2: Wait for OCR processing
+    yield* Effect.logInfo('Waiting 10s for OCR processing...');
+    yield* Effect.sleep(Duration.seconds(10));
+
+    // Phase 3: OCR fetch
+    yield* Effect.logInfo('Phase 2: Fetching OCR texts...');
+    const ocrTexts = yield* Effect.forEach(
+      imageIds,
+      (imageId, index) => fetchOcrText(index, imageId, images.length),
+      { concurrency: 50 },
+    );
+
+    // Phase 4: Render pages
+    const pages = imageIds.map((imageId, index) =>
+      renderPage(index, images.length, imageId, ocrTexts[index] ?? ''),
     );
 
     yield* Effect.logInfo(`Generated ${pages.length} page(s)`);

@@ -1,31 +1,47 @@
-import { Duration, Effect } from 'effect';
+import { Effect } from 'effect';
 import { Gyazo } from '../../Gyazo/index.ts';
-import { renderPage } from './renderPage.ts';
 
 /**
- * 画像から Page を生成
- * 1. Gyazo にアップロード
- * 2. 10秒待機（OCR 処理待ち）
- * 3. OCR テキスト取得
- * 4. Page を生成
+ * Gyazo にアップロードして imageId を返す
  */
-export const generatePage = (
+export const uploadImage = (
   index: number,
   imagePath: string,
   totalPages: number,
 ) =>
   Effect.gen(function* () {
     const gyazo = yield* Gyazo;
+    const tag = `[${index + 1}/${totalPages}]`;
+    const fileName = imagePath.split('/').pop() ?? imagePath;
 
-    // 1. Gyazo にアップロード
+    yield* Effect.logInfo(`${tag} Uploading: ${fileName}`);
     const imageId = yield* gyazo.upload(imagePath);
+    yield* Effect.logInfo(`${tag} Uploaded`);
 
-    // 2. 10秒待機（OCR 処理待ち）
-    yield* Effect.sleep(Duration.seconds(10));
+    return imageId;
+  });
 
-    // 3. OCR テキスト取得
-    const ocrText = yield* gyazo.getOcrText(imageId);
+/**
+ * OCR テキストを取得。失敗時は空文字を返す
+ */
+export const fetchOcrText = (
+  index: number,
+  imageId: string,
+  totalPages: number,
+) =>
+  Effect.gen(function* () {
+    const gyazo = yield* Gyazo;
+    const tag = `[${index + 1}/${totalPages}]`;
 
-    // 4. Page を生成
-    return renderPage(index, totalPages, imageId, ocrText);
+    yield* Effect.logInfo(`${tag} Fetching OCR text...`);
+    const ocrText = yield* gyazo.getOcrText(imageId).pipe(
+      Effect.catchAll(() =>
+        Effect.logWarning(
+          `${tag} OCR unavailable, continuing without OCR text`,
+        ).pipe(Effect.as('')),
+      ),
+    );
+    yield* Effect.logInfo(`${tag} OCR done`);
+
+    return ocrText;
   });
