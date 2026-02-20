@@ -7,8 +7,11 @@ import type { Project } from '../../services/Cosense/types.ts';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 
+const BATCH_SIZE = 50;
+
 /**
  * 画像ディレクトリから JSON を生成
+ * バッチ処理: BATCH_SIZE 枚ずつ upload → 10s wait → OCR fetch
  */
 export const imagesToJson = (imageDir: string) =>
   Effect.gen(function* () {
@@ -16,33 +19,47 @@ export const imagesToJson = (imageDir: string) =>
 
     yield* Effect.logInfo(`Processing images in: ${imageDir}`);
 
-    // 画像一覧を取得
     const images = yield* getImages(imageDir);
     yield* Effect.logInfo(`Found ${images.length} image(s)`);
 
-    // Phase 1: Upload
-    yield* Effect.logInfo('Phase 1: Uploading images...');
-    const imageIds = yield* Effect.forEach(
-      images,
-      (image, index) => uploadImage(index, image, images.length),
-      { concurrency: 50 },
-    );
+    const imageChunks = Array.chunksOf(images, BATCH_SIZE);
+    const allImageIds: string[] = [];
+    const allOcrTexts: string[] = [];
 
-    // Phase 2: Wait for OCR processing
-    yield* Effect.logInfo('Waiting 10s for OCR processing...');
-    yield* Effect.sleep(Duration.seconds(10));
+    for (const [chunkIndex, chunk] of imageChunks.entries()) {
+      const offset = chunkIndex * BATCH_SIZE;
 
-    // Phase 3: OCR fetch
-    yield* Effect.logInfo('Phase 2: Fetching OCR texts...');
-    const ocrTexts = yield* Effect.forEach(
-      imageIds,
-      (imageId, index) => fetchOcrText(index, imageId, images.length),
-      { concurrency: 50 },
-    );
+      // Upload batch
+      yield* Effect.logInfo(
+        `Batch ${chunkIndex + 1}/${imageChunks.length}: Uploading ${chunk.length} image(s)...`,
+      );
+      const chunkIds = yield* Effect.forEach(
+        chunk,
+        (image, index) => uploadImage(offset + index, image, images.length),
+        { concurrency: 'unbounded' },
+      );
+      allImageIds.push(...chunkIds);
 
-    // Phase 4: Render pages
-    const pages = imageIds.map((imageId, index) =>
-      renderPage(index, images.length, imageId, ocrTexts[index] ?? ''),
+      // Wait for OCR processing
+      yield* Effect.logInfo('Waiting 10s for OCR processing...');
+      yield* Effect.sleep(Duration.seconds(10));
+
+      // OCR fetch batch
+      yield* Effect.logInfo(
+        `Batch ${chunkIndex + 1}/${imageChunks.length}: Fetching OCR texts...`,
+      );
+      const chunkOcrTexts = yield* Effect.forEach(
+        chunkIds,
+        (imageId, index) =>
+          fetchOcrText(offset + index, imageId, images.length),
+        { concurrency: 'unbounded' },
+      );
+      allOcrTexts.push(...chunkOcrTexts);
+    }
+
+    // Render pages
+    const pages = allImageIds.map((imageId, index) =>
+      renderPage(index, images.length, imageId, allOcrTexts[index] ?? ''),
     );
 
     yield* Effect.logInfo(`Generated ${pages.length} page(s)`);
