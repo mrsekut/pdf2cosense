@@ -5,10 +5,12 @@ import {
   getPdfsNeedingConversion,
   getDirsWithoutIsbn,
   getBooksWithoutJson,
+  getJsonPaths,
 } from './workspace/index.ts';
 import { pdfToImages } from './phases/pdfToImages.ts';
 import { searchAndSaveIsbn } from './phases/isbnSearch.ts';
 import { imagesToJson } from './phases/imageToJson/index.ts';
+import { importToCosense } from './phases/cosenseImport.ts';
 import { AppConfig } from './config/AppConfig.ts';
 import { Gyazo } from './services/Gyazo/index.ts';
 import { FallbackIsbnSearchLayer } from './services/IsbnSearch/index.ts';
@@ -22,7 +24,7 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
     const pdfPaths = yield* getPdfsNeedingConversion(WORKSPACE_DIR);
     if (pdfPaths.length > 0) {
       yield* Effect.logInfo(`Found ${pdfPaths.length} PDF file(s) to convert`);
-      yield* Effect.forEach(pdfPaths, pdfToImages, { concurrency: 1 });
+      yield* Effect.forEach(pdfPaths, pdfToImages, { concurrency: 3 });
     }
 
     // Phase 2: ISBN 検索 + .isbn 保存
@@ -36,8 +38,6 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
       });
     }
 
-    // --- ここから放置可能 ---
-
     // Phase 3: Gyazo upload + OCR → JSON
     const books = yield* getBooksWithoutJson(WORKSPACE_DIR);
     if (books.length > 0) {
@@ -47,7 +47,12 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
       });
     }
 
-    // TODO: Phase 4 (Cosense インポート) は PR5 で実装
+    // Phase 4: Cosense インポート
+    const jsonPaths = yield* getJsonPaths(WORKSPACE_DIR);
+    if (jsonPaths.length > 0) {
+      yield* Effect.logInfo(`Found ${jsonPaths.length} JSON file(s) to import`);
+      yield* Effect.forEach(jsonPaths, importToCosense, { concurrency: 1 });
+    }
 
     yield* Effect.logInfo('All done!');
   }),
