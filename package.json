@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@effect/cli": "^0.62.0",
-    "@effect/platform": "^0.82.0",
+    "@effect/platform": "0.83.0",
     "@effect/platform-bun": "^0.66.0",
-    "effect": "^3.19.16",
+    "effect": "^3.19.18",
     "playwright": "^1.50.0"
   },
   "devDependencies": {
