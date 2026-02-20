@@ -49,12 +49,22 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
 
     // Phase 4: Cosense インポート
     const jsonPaths = yield* getJsonPaths(WORKSPACE_DIR);
+    const createdProjects: string[] = [];
     if (jsonPaths.length > 0) {
       yield* Effect.logInfo(`Found ${jsonPaths.length} JSON file(s) to import`);
-      yield* Effect.forEach(jsonPaths, importToCosense, { concurrency: 1 });
+      const results = yield* Effect.forEach(jsonPaths, importToCosense, {
+        concurrency: 1,
+      });
+      createdProjects.push(...results);
     }
 
     yield* Effect.logInfo('All done!');
+    if (createdProjects.length > 0) {
+      yield* Effect.logInfo('Created projects:');
+      for (const name of createdProjects) {
+        yield* Effect.logInfo(`  https://scrapbox.io/${name}/`);
+      }
+    }
   }),
 );
 
