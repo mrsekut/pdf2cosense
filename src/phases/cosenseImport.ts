@@ -24,6 +24,9 @@ export const importToCosense = (jsonPath: string) =>
     // プロジェクト作成
     const projectName = yield* Cosense.createProject(isbn);
 
+    // 後段の処理がプロジェクト名の組み立て方を知らずに済むよう、決定した名前を残す
+    yield* fs.writeFileString(path.join(imageDir, '.project'), projectName);
+
     // インポート
     yield* Cosense.importJsonViaGui(projectName, jsonPath);
 
