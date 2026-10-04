@@ -1,6 +1,7 @@
 import { BunServices, BunRuntime } from '@effect/platform-bun';
 import { Effect, Layer, Logger } from 'effect';
 import { Command } from 'effect/cli';
+import { FetchHttpClient } from 'effect/http';
 import {
   getPdfsNeedingConversion,
   getDirsWithoutIsbn,
@@ -73,6 +74,7 @@ const MainLayer = Layer.mergeAll(
   AppConfig.layer,
   Gyazo.layer,
   FallbackIsbnSearchLayer,
+  FetchHttpClient.layer,
   // v3 の runMain は色付きの pretty logger を自動で入れていたが、v4 は入れないので明示する
   Logger.layer([Logger.consolePretty()]),
 );

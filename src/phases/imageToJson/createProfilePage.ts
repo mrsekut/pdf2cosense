@@ -1,4 +1,5 @@
 import { Effect, Schema } from 'effect';
+import { HttpClient, HttpClientResponse } from 'effect/http';
 import type { Page } from '../../services/Cosense/types.ts';
 
 /**
@@ -27,42 +28,23 @@ const PageDetail = Schema.Struct({
 
 const fetchPage = (cosenseProfilePage: string) =>
   Effect.gen(function* () {
-    const url = `https://scrapbox.io/api/pages/${cosenseProfilePage}`;
-
-    const response = yield* Effect.tryPromise({
-      try: () => fetch(url),
-      catch: cause =>
+    // 2xx 以外のステータスもエラーとして扱う
+    const client = (yield* HttpClient.HttpClient).pipe(
+      HttpClient.filterStatusOk,
+    );
+    const response = yield* client.get(
+      `https://scrapbox.io/api/pages/${cosenseProfilePage}`,
+    );
+    return yield* HttpClientResponse.schemaBodyJson(PageDetail)(response);
+  }).pipe(
+    Effect.mapError(
+      cause =>
         new CreateProfileError({
           message: `Failed to fetch profile page: ${cosenseProfilePage}`,
           cause,
         }),
-    });
-
-    if (!response.ok) {
-      return yield* new CreateProfileError({
-        message: `Failed to fetch profile page: ${response.status} ${response.statusText}`,
-      });
-    }
-
-    const json = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: cause =>
-        new CreateProfileError({
-          message: 'Failed to parse profile page response',
-          cause,
-        }),
-    });
-
-    return yield* Schema.decodeUnknownEffect(PageDetail)(json).pipe(
-      Effect.mapError(
-        cause =>
-          new CreateProfileError({
-            message: 'Invalid profile page response format',
-            cause,
-          }),
-      ),
-    );
-  });
+    ),
+  );
 
 class CreateProfileError extends Schema.TaggedError<CreateProfileError>()(
   'CreateProfileError',
