@@ -182,12 +182,10 @@ const make = Effect.gen(function* () {
   return {
     upload: (imagePath: string) =>
       uploadOnce(imagePath).pipe(
-        Effect.retry(
-          Schedule.intersect(
-            Schedule.exponential('2 seconds'),
-            Schedule.recurs(5),
-          ),
-        ),
+        Effect.retry({
+          schedule: Schedule.exponential('2 seconds'),
+          times: 5,
+        }),
         Effect.tapError(e =>
           Effect.logWarning(`Gyazo upload failed after retries: ${e.message}`),
         ),
@@ -202,10 +200,8 @@ const make = Effect.gen(function* () {
             : Effect.void,
         ),
         Effect.retry({
-          schedule: Schedule.intersect(
-            Schedule.exponential('2 seconds'),
-            Schedule.recurs(5),
-          ),
+          schedule: Schedule.exponential('2 seconds'),
+          times: 5,
           while: e => e._tag === 'OcrPendingError',
         }),
         Effect.tapError(e =>
