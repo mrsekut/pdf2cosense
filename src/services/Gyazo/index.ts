@@ -1,6 +1,10 @@
 import { Config, Effect, Schedule, Schema } from 'effect';
+import { Command, CommandExecutor } from '@effect/platform';
 import * as Fs from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
+
+/** これを超える画像は JPEG に変換してからアップロードする（33.7MB の PNG は通り、42MB は 413 になった） */
+const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
 
 // ===== Response Schemas =====
 
@@ -27,6 +31,48 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
     const gyazoToken = yield* Config.string('GYAZO_TOKEN');
     const fs = yield* Fs.FileSystem;
     const path = yield* Path.Path;
+    const executor = yield* CommandExecutor.CommandExecutor;
+
+    /** アップロード用に画像を読み込む。上限を超える場合は sips で JPEG に変換したものを返す */
+    const prepareImageForUpload = (imagePath: string) =>
+      Effect.gen(function* () {
+        const size = Number((yield* fs.stat(imagePath)).size);
+        const fileName = path.basename(imagePath);
+        if (size <= MAX_UPLOAD_BYTES) {
+          return { content: yield* fs.readFile(imagePath), fileName };
+        }
+
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const jpegName = fileName.replace(/\.[^.]+$/, '.jpg');
+        const jpegPath = path.join(tmpDir, jpegName);
+        const exitCode = yield* Command.make(
+          'sips',
+          '-s',
+          'format',
+          'jpeg',
+          '-s',
+          'formatOptions',
+          '85',
+          imagePath,
+          '--out',
+          jpegPath,
+        ).pipe(
+          Command.stdout('pipe'),
+          Command.exitCode,
+          Effect.provideService(CommandExecutor.CommandExecutor, executor),
+        );
+        if (exitCode !== 0) {
+          return yield* new GyazoError({
+            message: `sips failed to convert ${imagePath} to JPEG (exit ${exitCode})`,
+          });
+        }
+
+        const content = yield* fs.readFile(jpegPath);
+        yield* Effect.logInfo(
+          `Converted ${fileName} to JPEG: ${(size / 1024 / 1024).toFixed(1)}MB -> ${(content.length / 1024 / 1024).toFixed(1)}MB`,
+        );
+        return { content, fileName: jpegName };
+      }).pipe(Effect.scoped);
 
     const uploadOnce = (imagePath: string) =>
       Effect.gen(function* () {
@@ -38,8 +84,8 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
           });
         }
 
-        const fileContent = yield* fs.readFile(imagePath);
-        const fileName = path.basename(imagePath);
+        const { content: fileContent, fileName } =
+          yield* prepareImageForUpload(imagePath);
 
         const formData = new FormData();
         formData.append('access_token', gyazoToken);
