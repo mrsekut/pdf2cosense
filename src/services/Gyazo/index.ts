@@ -8,6 +8,7 @@ import {
   FileSystem as Fs,
   Path,
 } from 'effect';
+import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/http';
 import { ChildProcess, ChildProcessSpawner } from 'effect/process';
 
 /** これを超える画像は JPEG に変換してからアップロードする（33.7MB の PNG は通り、42MB は 413 になった） */
@@ -38,6 +39,8 @@ const make = Effect.gen(function* () {
   const fs = yield* Fs.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // 2xx 以外のステータスもエラーとして扱う
+  const client = (yield* HttpClient.HttpClient).pipe(HttpClient.filterStatusOk);
 
   /** アップロード用に画像を読み込む。上限を超える場合は sips で JPEG に変換したものを返す */
   const prepareImageForUpload = (imagePath: string) =>
@@ -102,82 +105,42 @@ const make = Effect.gen(function* () {
         fileName,
       );
 
-      const response = yield* Effect.tryPromise({
-        try: () =>
-          fetch('https://upload.gyazo.com/api/upload', {
-            method: 'POST',
-            body: formData,
-          }),
-        catch: cause =>
-          new GyazoError({ message: 'Failed to upload to Gyazo', cause }),
-      });
-
-      if (!response.ok) {
-        return yield* new GyazoError({
-          message: `Gyazo upload failed: ${response.status} ${response.statusText}`,
-        });
-      }
-
-      const json = yield* Effect.tryPromise({
-        try: () => response.json(),
-        catch: cause =>
-          new GyazoError({
-            message: 'Failed to parse upload response',
-            cause,
-          }),
-      });
-
-      const parsed = yield* Schema.decodeUnknownEffect(UploadResponse)(
-        json,
-      ).pipe(
-        Effect.mapError(
-          cause =>
-            new GyazoError({
-              message: 'Invalid upload response format',
-              cause,
-            }),
-        ),
-      );
+      const parsed = yield* client
+        .execute(
+          HttpClientRequest.post('https://upload.gyazo.com/api/upload').pipe(
+            HttpClientRequest.bodyFormData(formData),
+          ),
+        )
+        .pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(UploadResponse)),
+          Effect.mapError(
+            cause =>
+              new GyazoError({
+                message: `Gyazo upload failed: ${cause.message}`,
+                cause,
+              }),
+          ),
+        );
 
       return parsed.image_id;
     });
 
   const getOcrTextOnce = (imageId: string) =>
     Effect.gen(function* () {
-      const url = `https://api.gyazo.com/api/images/${imageId}?access_token=${gyazoToken}`;
-
-      const response = yield* Effect.tryPromise({
-        try: () => fetch(url),
-        catch: cause =>
-          new GyazoError({ message: 'Failed to fetch image data', cause }),
-      });
-
-      if (!response.ok) {
-        return yield* new GyazoError({
-          message: `Gyazo API failed: ${response.status} ${response.statusText}`,
-        });
-      }
-
-      const json = yield* Effect.tryPromise({
-        try: () => response.json(),
-        catch: cause =>
-          new GyazoError({
-            message: 'Failed to parse image response',
-            cause,
-          }),
-      });
-
-      const parsed = yield* Schema.decodeUnknownEffect(ImageResponse)(
-        json,
-      ).pipe(
-        Effect.mapError(
-          cause =>
-            new GyazoError({
-              message: 'Invalid image response format',
-              cause,
-            }),
-        ),
-      );
+      const parsed = yield* client
+        .get(`https://api.gyazo.com/api/images/${imageId}`, {
+          urlParams: { access_token: gyazoToken },
+        })
+        .pipe(
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(ImageResponse)),
+          Effect.mapError(
+            cause =>
+              new GyazoError({
+                message: `Gyazo API failed: ${cause.message}`,
+                cause,
+              }),
+          ),
+        );
 
       const ocrText = parsed.metadata.ocr?.description ?? '';
 
