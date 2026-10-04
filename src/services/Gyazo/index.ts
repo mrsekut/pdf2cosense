@@ -223,11 +223,8 @@ const make = Effect.gen(function* () {
   };
 });
 
-export class Gyazo extends Context.Service<
-  Gyazo,
-  Effect.Success<typeof make>
->()('Gyazo') {
-  static readonly layer = Layer.effect(Gyazo, make);
+export class Gyazo extends Context.Service<Gyazo>()('Gyazo', { make }) {
+  static readonly layer = Layer.effect(this, this.make);
 }
 
 class GyazoError extends Schema.TaggedError<GyazoError>()('GyazoError', {
