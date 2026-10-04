@@ -71,7 +71,7 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
 // Layer
 const MainLayer = Layer.mergeAll(
   AppConfig.layer,
-  Gyazo.Default,
+  Gyazo.layer,
   FallbackIsbnSearchLayer,
 );
 
