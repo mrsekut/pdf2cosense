@@ -1,10 +1,14 @@
-import { Effect } from 'effect';
+import { Context, Layer } from 'effect';
 
-export class AppConfig extends Effect.Service<AppConfig>()('AppConfig', {
-  effect: Effect.gen(function* () {
-    return {
-      projectPrefix: 'mrsekut-book',
-      profile: 'mrsekut-merry-firends/mrsekut' as string | undefined,
-    };
-  }),
-}) {}
+export class AppConfig extends Context.Tag('AppConfig')<
+  AppConfig,
+  {
+    readonly projectPrefix: string;
+    readonly profile: string | undefined;
+  }
+>() {
+  static readonly layer = Layer.succeed(AppConfig, {
+    projectPrefix: 'mrsekut-book',
+    profile: 'mrsekut-merry-firends/mrsekut',
+  });
+}

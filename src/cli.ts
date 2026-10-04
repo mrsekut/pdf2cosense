@@ -70,7 +70,7 @@ const mainCommand = Command.make('pdf2cosense', {}, () =>
 
 // Layer
 const MainLayer = Layer.mergeAll(
-  AppConfig.Default,
+  AppConfig.layer,
   Gyazo.Default,
   FallbackIsbnSearchLayer,
 );

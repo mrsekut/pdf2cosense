@@ -61,7 +61,7 @@ if (import.meta.main) {
   }
 
   createProject(isbn).pipe(
-    Effect.provide(AppConfig.Default),
+    Effect.provide(AppConfig.layer),
     Effect.provide(BunContext.layer),
     BunRuntime.runMain,
   );
