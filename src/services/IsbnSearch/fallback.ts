@@ -30,7 +30,7 @@ const searchWithFallback = (
     // 1. NDLで検索
     yield* Effect.logDebug(`Trying NDL for: ${title}`);
     const ndlResult = yield* ndlSearchByTitle(title).pipe(
-      Effect.catchAll(() => Effect.succeed(null)),
+      Effect.orElseSucceed(() => null),
     );
     if (ndlResult) {
       yield* Effect.logDebug('Found via NDL');
@@ -40,7 +40,7 @@ const searchWithFallback = (
     // 2. Google Booksで検索
     yield* Effect.logDebug(`Trying Google Books for: ${title}`);
     const googleResult = yield* googleBooksSearchByTitle(title).pipe(
-      Effect.catchAll(() => Effect.succeed(null)),
+      Effect.orElseSucceed(() => null),
     );
     if (googleResult) {
       yield* Effect.logDebug('Found via Google Books');
