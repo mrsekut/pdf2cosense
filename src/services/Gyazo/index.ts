@@ -138,7 +138,10 @@ export class Gyazo extends Effect.Service<Gyazo>()('Gyazo', {
       upload: (imagePath: string) =>
         uploadOnce(imagePath).pipe(
           Effect.retry(
-            Schedule.recurs(3).pipe(Schedule.addDelay(() => '3 seconds')),
+            Schedule.intersect(
+              Schedule.exponential('2 seconds'),
+              Schedule.recurs(5),
+            ),
           ),
           Effect.tapError(e =>
             Effect.logWarning(
