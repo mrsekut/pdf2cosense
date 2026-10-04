@@ -1,0 +1,4 @@
+# 本の中身を含むので run.sh 以外はコミットしない
+*
+!.gitignore
+!run.sh
