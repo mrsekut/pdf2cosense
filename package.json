@@ -4,8 +4,6 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/cli.ts",
-    "pdf-to-json": "bun run src/cli.ts --json-only",
-    "upload": "bun run src/cli.ts --upload-only",
     "//": "//",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",

@@ -9,7 +9,3 @@ export const Page = Schema.Struct({
 export type Project = {
   pages: Page[];
 };
-
-export const CosenseJson = Schema.Struct({
-  pages: Schema.Array(Page),
-});

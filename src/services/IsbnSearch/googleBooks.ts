@@ -1,10 +1,5 @@
-import { Effect, Schema, Layer } from 'effect';
-import {
-  IsbnSearch,
-  IsbnNotFoundError,
-  ApiError,
-  type BookInfo,
-} from './service.ts';
+import { Effect, Schema } from 'effect';
+import { IsbnNotFoundError, ApiError, type BookInfo } from './service.ts';
 
 const GoogleBooksResponse = Schema.Struct({
   totalItems: Schema.Number,
@@ -92,7 +87,3 @@ export const googleBooksSearchByTitle = (
 
     return yield* new IsbnNotFoundError({ title });
   });
-
-export const GoogleBooksLayer = Layer.succeed(IsbnSearch, {
-  searchByTitle: googleBooksSearchByTitle,
-});

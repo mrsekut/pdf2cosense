@@ -1,10 +1,5 @@
-import { Effect, Layer } from 'effect';
-import {
-  IsbnSearch,
-  IsbnNotFoundError,
-  ApiError,
-  type BookInfo,
-} from './service.ts';
+import { Effect } from 'effect';
+import { IsbnNotFoundError, ApiError, type BookInfo } from './service.ts';
 
 export const ndlSearchByTitle = (
   title: string,
@@ -44,7 +39,3 @@ export const ndlSearchByTitle = (
       authors: authorMatch?.[1] ? [authorMatch[1]] : [],
     };
   });
-
-export const NdlLayer = Layer.succeed(IsbnSearch, {
-  searchByTitle: ndlSearchByTitle,
-});
