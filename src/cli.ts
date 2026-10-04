@@ -74,9 +74,11 @@ const MainLayer = Layer.mergeAll(
   AppConfig.layer,
   Gyazo.layer,
   FallbackIsbnSearchLayer,
-  FetchHttpClient.layer,
   // v3 の runMain は色付きの pretty logger を自動で入れていたが、v4 は入れないので明示する
   Logger.layer([Logger.consolePretty()]),
+).pipe(
+  // HttpClient は FallbackIsbnSearchLayer の材料にもなり、phase からも直接使うので provideMerge
+  Layer.provideMerge(FetchHttpClient.layer),
 );
 
 // CLI entry point（引数は BunServices に含まれる Stdio から読まれる）

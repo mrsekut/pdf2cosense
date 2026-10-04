@@ -1,4 +1,5 @@
 import { Effect, Layer, Console } from 'effect';
+import { HttpClient } from 'effect/http';
 import * as Readline from 'node:readline';
 import { IsbnSearch, IsbnNotFoundError, type BookInfo } from './service.ts';
 import { ndlSearchByTitle } from './ndl.ts';
@@ -25,7 +26,7 @@ const promptIsbn = (title: string): Effect.Effect<string | null> =>
 
 const searchWithFallback = (
   title: string,
-): Effect.Effect<BookInfo, IsbnNotFoundError> =>
+): Effect.Effect<BookInfo, IsbnNotFoundError, HttpClient.HttpClient> =>
   Effect.gen(function* () {
     // 1. NDLで検索
     yield* Effect.logDebug(`Trying NDL for: ${title}`);
@@ -60,6 +61,16 @@ const searchWithFallback = (
     return yield* new IsbnNotFoundError({ title });
   });
 
-export const FallbackIsbnSearchLayer = Layer.succeed(IsbnSearch, {
-  searchByTitle: searchWithFallback,
-});
+// HttpClient は Layer を作るときに1回だけ取り出し、IsbnSearch の利用者には見せない
+export const FallbackIsbnSearchLayer = Layer.effect(
+  IsbnSearch,
+  Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient;
+    return {
+      searchByTitle: title =>
+        searchWithFallback(title).pipe(
+          Effect.provideService(HttpClient.HttpClient, client),
+        ),
+    };
+  }),
+);

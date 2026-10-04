@@ -1,22 +1,26 @@
 import { Effect } from 'effect';
+import { HttpClient } from 'effect/http';
 import { IsbnNotFoundError, ApiError, type BookInfo } from './service.ts';
 
 export const ndlSearchByTitle = (
   title: string,
-): Effect.Effect<BookInfo, IsbnNotFoundError | ApiError> =>
+): Effect.Effect<
+  BookInfo,
+  IsbnNotFoundError | ApiError,
+  HttpClient.HttpClient
+> =>
   Effect.gen(function* () {
-    const query = encodeURIComponent(title);
-    const url = `https://ndlsearch.ndl.go.jp/api/opensearch?title=${query}&cnt=5`;
-
-    const response = yield* Effect.tryPromise({
-      try: () => fetch(url),
-      catch: () => new ApiError({ message: 'Failed to fetch' }),
-    });
-
-    const xml = yield* Effect.tryPromise({
-      try: () => response.text(),
-      catch: () => new ApiError({ message: 'Failed to read response' }),
-    });
+    const client = (yield* HttpClient.HttpClient).pipe(
+      HttpClient.filterStatusOk,
+    );
+    const xml = yield* client
+      .get('https://ndlsearch.ndl.go.jp/api/opensearch', {
+        urlParams: { title, cnt: 5 },
+      })
+      .pipe(
+        Effect.flatMap(response => response.text),
+        Effect.mapError(e => new ApiError({ message: `NDL: ${e.message}` })),
+      );
 
     // XMLからISBNを抽出 (簡易パース)
     // ISBN形式: 978-4-297-12914-9 or 4297129149
