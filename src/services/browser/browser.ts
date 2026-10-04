@@ -9,6 +9,8 @@ export const launch = () =>
   Effect.tryPromise({
     try: async () => {
       return await chromium.launchPersistentContext(DEFAULT_PROFILE_DIR, {
+        // Playwright 同梱の Chromium ではなくインストール済みの Chrome を使う
+        channel: 'chrome',
         headless: false,
         args: ['--disable-blink-features=AutomationControlled'],
       });
