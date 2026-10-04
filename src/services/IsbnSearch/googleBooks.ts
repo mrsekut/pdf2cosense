@@ -1,4 +1,5 @@
 import { Effect, Schema } from 'effect';
+import { HttpClient, HttpClientResponse } from 'effect/http';
 import { IsbnNotFoundError, ApiError, type BookInfo } from './service.ts';
 
 const GoogleBooksResponse = Schema.Struct({
@@ -32,33 +33,39 @@ const GoogleBooksErrorResponse = Schema.Struct({
 
 export const googleBooksSearchByTitle = (
   title: string,
-): Effect.Effect<BookInfo, IsbnNotFoundError | ApiError> =>
+): Effect.Effect<
+  BookInfo,
+  IsbnNotFoundError | ApiError,
+  HttpClient.HttpClient
+> =>
   Effect.gen(function* () {
-    const query = encodeURIComponent(title);
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=5`;
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client
+      .get('https://www.googleapis.com/books/v1/volumes', {
+        urlParams: { q: title, maxResults: 5 },
+      })
+      .pipe(
+        Effect.mapError(
+          e => new ApiError({ message: `Google Books: ${e.message}` }),
+        ),
+      );
 
-    const response = yield* Effect.tryPromise({
-      try: () => fetch(url),
-      catch: () => new ApiError({ message: 'Failed to fetch' }),
+    // 2xx は検索結果、それ以外は Google のエラー本文からメッセージを取り出す
+    const data = yield* HttpClientResponse.matchStatus(response, {
+      '2xx': r =>
+        HttpClientResponse.schemaBodyJson(GoogleBooksResponse)(r).pipe(
+          Effect.mapError(() => new ApiError({ message: 'Invalid response' })),
+        ),
+      orElse: r =>
+        HttpClientResponse.schemaBodyJson(GoogleBooksErrorResponse)(r).pipe(
+          Effect.matchEffect({
+            onSuccess: body =>
+              Effect.fail(new ApiError({ message: body.error.message })),
+            onFailure: () =>
+              Effect.fail(new ApiError({ message: `HTTP ${r.status}` })),
+          }),
+        ),
     });
-
-    const json = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: () => new ApiError({ message: 'Failed to parse JSON' }),
-    });
-
-    const errorResult = Schema.decodeUnknownOption(GoogleBooksErrorResponse)(
-      json,
-    );
-    if (errorResult._tag === 'Some') {
-      return yield* new ApiError({ message: errorResult.value.error.message });
-    }
-
-    const data = yield* Schema.decodeUnknownEffect(GoogleBooksResponse)(
-      json,
-    ).pipe(
-      Effect.mapError(() => new ApiError({ message: 'Invalid response' })),
-    );
 
     if (!data.items || data.items.length === 0) {
       return yield* new IsbnNotFoundError({ title });
