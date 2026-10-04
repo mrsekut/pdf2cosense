@@ -1,5 +1,4 @@
-import { Effect } from 'effect';
-import * as Fs from '@effect/platform/FileSystem';
+import { Effect, FileSystem as Fs } from 'effect';
 import type { Page, Project } from '../../services/Cosense/types.ts';
 
 /**

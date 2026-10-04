@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { BunContext } from '@effect/platform-bun';
+import { BunServices } from '@effect/platform-bun';
 import { Effect } from 'effect';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -21,8 +21,8 @@ afterEach(() => {
   fs.rmSync(ws, { recursive: true, force: true });
 });
 
-const run = <A, E>(effect: Effect.Effect<A, E, BunContext.BunContext>) =>
-  Effect.runPromise(effect.pipe(Effect.provide(BunContext.layer)));
+const run = <A, E>(effect: Effect.Effect<A, E, BunServices.BunServices>) =>
+  Effect.runPromise(effect.pipe(Effect.provide(BunServices.layer)));
 
 const touch = (rel: string, content = '') => {
   const p = path.join(ws, rel);

@@ -1,6 +1,4 @@
-import { Effect } from 'effect';
-import * as Fs from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
+import { Effect, FileSystem as Fs, Path } from 'effect';
 import { IsbnSearch } from '../services/IsbnSearch/index.ts';
 
 /**

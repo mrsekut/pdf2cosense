@@ -37,7 +37,7 @@ export const fetchOcrText = (
     const ocrText = yield* gyazo
       .getOcrText(imageId)
       .pipe(
-        Effect.catchAll(() =>
+        Effect.catch(() =>
           Effect.logWarning(
             `${tag} OCR unavailable, continuing without OCR text`,
           ).pipe(Effect.as('')),

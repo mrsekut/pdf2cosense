@@ -54,7 +54,9 @@ export const googleBooksSearchByTitle = (
       return yield* new ApiError({ message: errorResult.value.error.message });
     }
 
-    const data = yield* Schema.decodeUnknown(GoogleBooksResponse)(json).pipe(
+    const data = yield* Schema.decodeUnknownEffect(GoogleBooksResponse)(
+      json,
+    ).pipe(
       Effect.mapError(() => new ApiError({ message: 'Invalid response' })),
     );
 

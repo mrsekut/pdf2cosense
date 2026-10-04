@@ -1,6 +1,6 @@
-import { Command } from '@effect/cli';
-import { BunContext, BunRuntime } from '@effect/platform-bun';
-import { Effect, Layer } from 'effect';
+import { BunServices, BunRuntime } from '@effect/platform-bun';
+import { Effect, Layer, Logger } from 'effect';
+import { Command } from 'effect/cli';
 import {
   getPdfsNeedingConversion,
   getDirsWithoutIsbn,
@@ -73,16 +73,13 @@ const MainLayer = Layer.mergeAll(
   AppConfig.layer,
   Gyazo.layer,
   FallbackIsbnSearchLayer,
+  // v3 の runMain は色付きの pretty logger を自動で入れていたが、v4 は入れないので明示する
+  Logger.layer([Logger.consolePretty()]),
 );
 
-// CLI entry point
-const cli = Command.run(mainCommand, {
-  name: 'pdf2cosense',
-  version: '0.1.0',
-});
-
-cli(process.argv).pipe(
+// CLI entry point（引数は BunServices に含まれる Stdio から読まれる）
+Command.run(mainCommand, { version: '0.1.0' }).pipe(
   Effect.provide(MainLayer),
-  Effect.provide(BunContext.layer),
+  Effect.provide(BunServices.layer),
   BunRuntime.runMain,
 );

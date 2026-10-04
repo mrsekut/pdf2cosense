@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect';
-import { BunContext, BunRuntime } from '@effect/platform-bun';
+import { BunServices, BunRuntime } from '@effect/platform-bun';
 import * as browser from './browser';
 
 // ブラウザでログイン（認証情報はブラウザプロファイルに保存される）
@@ -33,7 +33,7 @@ export const login = () =>
   });
 
 // ヘルパー: Enter キー待機
-const waitForEnter = Effect.async<void>(resume => {
+const waitForEnter = Effect.callback<void>(resume => {
   process.stdin.once('data', () => {
     process.stdin.pause();
     resume(Effect.void);
@@ -47,5 +47,5 @@ class AuthError extends Schema.TaggedError<AuthError>()('AuthError', {
 
 // 直接実行時
 if (import.meta.main) {
-  login().pipe(Effect.provide(BunContext.layer), BunRuntime.runMain);
+  login().pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);
 }

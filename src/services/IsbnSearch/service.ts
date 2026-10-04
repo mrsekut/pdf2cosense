@@ -8,14 +8,14 @@ export interface BookInfo {
 }
 
 // Service定義
-export class IsbnSearch extends Context.Tag('IsbnSearch')<
+export class IsbnSearch extends Context.Service<
   IsbnSearch,
   {
     readonly searchByTitle: (
       title: string,
     ) => Effect.Effect<BookInfo, IsbnNotFoundError | ApiError>;
   }
->() {}
+>()('IsbnSearch') {}
 
 // エラー型
 export class IsbnNotFoundError extends Schema.TaggedError<IsbnNotFoundError>()(

@@ -1,11 +1,17 @@
-import { Duration, Effect, pipe, Array, Order } from 'effect';
+import {
+  Duration,
+  Effect,
+  pipe,
+  Array,
+  Order,
+  FileSystem as Fs,
+  Path,
+} from 'effect';
 import { AppConfig } from '../../config/AppConfig.ts';
 import { uploadImage, fetchOcrText } from './generatePage.ts';
 import { renderPage, saveJson } from './renderPage.ts';
 import { createProfilePage } from './createProfilePage.ts';
 import type { Project } from '../../services/Cosense/types.ts';
-import * as Fs from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 
 const BATCH_SIZE = 50;
 const UPLOAD_CONCURRENCY = 10;
@@ -60,9 +66,11 @@ export const imagesToJson = (imageDir: string) =>
           toUpload,
           e =>
             uploadImage(e.index, e.image, images.length).pipe(
-              Effect.tap(imageId => {
-                progress[e.key] = { imageId };
-              }),
+              Effect.tap(imageId =>
+                Effect.sync(() => {
+                  progress[e.key] = { imageId };
+                }),
+              ),
             ),
           { concurrency: UPLOAD_CONCURRENCY },
         ).pipe(Effect.ensuring(saveProgress(progressPath, progress)));
@@ -85,9 +93,11 @@ export const imagesToJson = (imageDir: string) =>
           e => {
             const entry = progress[e.key]!;
             return fetchOcrText(e.index, entry.imageId, images.length).pipe(
-              Effect.tap(ocrText => {
-                entry.ocrText = ocrText;
-              }),
+              Effect.tap(ocrText =>
+                Effect.sync(() => {
+                  entry.ocrText = ocrText;
+                }),
+              ),
             );
           },
           { concurrency: 'unbounded' },
@@ -139,7 +149,7 @@ const getImages = (dirPath: string) =>
       entries,
       Array.filter(e => e.toLowerCase().endsWith('.png')),
       Array.sort(
-        Order.mapInput(Order.number, (s: string) =>
+        Order.mapInput(Order.Number, (s: string) =>
           parseInt(s.replace(/\.png$/i, ''), 10),
         ),
       ),
@@ -155,7 +165,7 @@ const loadProgress = (progressPath: string) =>
     const text = yield* fs.readFileString(progressPath);
     return yield* Effect.try(() => JSON.parse(text) as Progress);
   }).pipe(
-    Effect.catchAll(e =>
+    Effect.catch(e =>
       Effect.logWarning(`Failed to load progress, starting fresh: ${e}`).pipe(
         Effect.as({} as Progress),
       ),
@@ -167,5 +177,5 @@ const saveProgress = (progressPath: string, progress: Progress) =>
     const fs = yield* Fs.FileSystem;
     yield* fs.writeFileString(progressPath, JSON.stringify(progress, null, 2));
   }).pipe(
-    Effect.catchAll(e => Effect.logWarning(`Failed to save progress: ${e}`)),
+    Effect.catch(e => Effect.logWarning(`Failed to save progress: ${e}`)),
   );

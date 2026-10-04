@@ -10,14 +10,12 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "@effect/cli": "^0.62.0",
-    "@effect/platform": "0.83.0",
-    "@effect/platform-bun": "^0.66.0",
-    "effect": "^3.19.18",
+    "@effect/platform-bun": "^4.0.0",
+    "effect": "^4.0.0",
     "playwright": "^1.50.0"
   },
   "devDependencies": {
-    "@effect/language-service": "^0.73.0",
+    "@effect/language-service": "^0.87.3",
     "@types/bun": "^1.1.0",
     "prettier": "^3.8.1",
     "typescript": "^5.7.0"

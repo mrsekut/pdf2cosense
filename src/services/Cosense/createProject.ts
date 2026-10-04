@@ -1,6 +1,6 @@
 import { Effect, Schema } from 'effect';
 import type { BrowserContext } from 'playwright';
-import { BunContext, BunRuntime } from '@effect/platform-bun';
+import { BunServices, BunRuntime } from '@effect/platform-bun';
 import * as browser from '../browser/browser';
 import { AppConfig } from '../../config/AppConfig.ts';
 
@@ -62,7 +62,7 @@ if (import.meta.main) {
 
   createProject(isbn).pipe(
     Effect.provide(AppConfig.layer),
-    Effect.provide(BunContext.layer),
+    Effect.provide(BunServices.layer),
     BunRuntime.runMain,
   );
 }

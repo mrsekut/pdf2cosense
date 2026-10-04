@@ -1,7 +1,14 @@
-import { Config, Context, Effect, Layer, Schedule, Schema } from 'effect';
-import { Command, CommandExecutor } from '@effect/platform';
-import * as Fs from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
+import {
+  Config,
+  Context,
+  Effect,
+  Layer,
+  Schedule,
+  Schema,
+  FileSystem as Fs,
+  Path,
+} from 'effect';
+import { ChildProcess, ChildProcessSpawner } from 'effect/process';
 
 /** これを超える画像は JPEG に変換してからアップロードする（33.7MB の PNG は通り、42MB は 413 になった） */
 const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
@@ -27,10 +34,10 @@ const ImageResponse = Schema.Struct({
 // ===== Service Definition =====
 
 const make = Effect.gen(function* () {
-  const gyazoToken = yield* Config.string('GYAZO_TOKEN');
+  const gyazoToken = yield* Config.String('GYAZO_TOKEN');
   const fs = yield* Fs.FileSystem;
   const path = yield* Path.Path;
-  const executor = yield* CommandExecutor.CommandExecutor;
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
   /** アップロード用に画像を読み込む。上限を超える場合は sips で JPEG に変換したものを返す */
   const prepareImageForUpload = (imagePath: string) =>
@@ -44,21 +51,22 @@ const make = Effect.gen(function* () {
       const tmpDir = yield* fs.makeTempDirectoryScoped();
       const jpegName = fileName.replace(/\.[^.]+$/, '.jpg');
       const jpegPath = path.join(tmpDir, jpegName);
-      const exitCode = yield* Command.make(
-        'sips',
-        '-s',
-        'format',
-        'jpeg',
-        '-s',
-        'formatOptions',
-        '85',
-        imagePath,
-        '--out',
-        jpegPath,
-      ).pipe(
-        Command.stdout('pipe'),
-        Command.exitCode,
-        Effect.provideService(CommandExecutor.CommandExecutor, executor),
+      const exitCode = yield* spawner.exitCode(
+        ChildProcess.make(
+          'sips',
+          [
+            '-s',
+            'format',
+            'jpeg',
+            '-s',
+            'formatOptions',
+            '85',
+            imagePath,
+            '--out',
+            jpegPath,
+          ],
+          { stdout: 'ignore' },
+        ),
       );
       if (exitCode !== 0) {
         return yield* new GyazoError({
@@ -119,7 +127,9 @@ const make = Effect.gen(function* () {
           }),
       });
 
-      const parsed = yield* Schema.decodeUnknown(UploadResponse)(json).pipe(
+      const parsed = yield* Schema.decodeUnknownEffect(UploadResponse)(
+        json,
+      ).pipe(
         Effect.mapError(
           cause =>
             new GyazoError({
@@ -157,7 +167,9 @@ const make = Effect.gen(function* () {
           }),
       });
 
-      const parsed = yield* Schema.decodeUnknown(ImageResponse)(json).pipe(
+      const parsed = yield* Schema.decodeUnknownEffect(ImageResponse)(
+        json,
+      ).pipe(
         Effect.mapError(
           cause =>
             new GyazoError({
@@ -211,10 +223,10 @@ const make = Effect.gen(function* () {
   };
 });
 
-export class Gyazo extends Context.Tag('Gyazo')<
+export class Gyazo extends Context.Service<
   Gyazo,
-  Effect.Effect.Success<typeof make>
->() {
+  Effect.Success<typeof make>
+>()('Gyazo') {
   static readonly layer = Layer.effect(Gyazo, make);
 }
 

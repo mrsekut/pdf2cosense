@@ -53,7 +53,7 @@ const fetchPage = (cosenseProfilePage: string) =>
         }),
     });
 
-    return yield* Schema.decodeUnknown(PageDetail)(json).pipe(
+    return yield* Schema.decodeUnknownEffect(PageDetail)(json).pipe(
       Effect.mapError(
         cause =>
           new CreateProfileError({

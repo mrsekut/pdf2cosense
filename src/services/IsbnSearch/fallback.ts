@@ -6,7 +6,7 @@ import { googleBooksSearchByTitle } from './googleBooks.ts';
 
 // ユーザーにISBNを入力させる
 const promptIsbn = (title: string): Effect.Effect<string | null> =>
-  Effect.async<string | null>(resume => {
+  Effect.callback<string | null>(resume => {
     const rl = Readline.createInterface({
       input: process.stdin,
       output: process.stdout,

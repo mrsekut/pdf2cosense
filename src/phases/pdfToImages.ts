@@ -1,7 +1,5 @@
-import { Effect, Schema } from 'effect';
-import { Command } from '@effect/platform';
-import * as Fs from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
+import { Effect, Schema, FileSystem as Fs, Path } from 'effect';
+import { ChildProcess, ChildProcessSpawner } from 'effect/process';
 
 /**
  * PDF を画像に変換
@@ -32,19 +30,23 @@ export const pdfToImages = (pdfPath: string) =>
     // mutool convert 実行
     const outPattern = path.join(outDir, '%d.png');
 
-    const command = Command.make(
+    const command = ChildProcess.make(
       'mutool',
-      'convert',
-      '-F',
-      'png',
-      '-O',
-      'resolution=600,gamma=1',
-      '-o',
-      outPattern,
-      pdfPath,
-    ).pipe(Command.stderr('inherit'), Command.stdout('inherit'));
+      [
+        'convert',
+        '-F',
+        'png',
+        '-O',
+        'resolution=600,gamma=1',
+        '-o',
+        outPattern,
+        pdfPath,
+      ],
+      { stdout: 'inherit', stderr: 'inherit' },
+    );
 
-    const exitCode = yield* Command.exitCode(command);
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const exitCode = yield* spawner.exitCode(command);
 
     if (exitCode !== 0) {
       return yield* new MutoolError({
